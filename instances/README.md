@@ -27,19 +27,15 @@ There can only be one AMI image or volume with a given type, but there may be mu
 
 ## How we create AMIs
 
-We follow the guidelines at http://alestic.com/2010/01/ec2-ebs-boot-ubuntu
+We start up a vanilla Ubuntu, add some packages, and create an AMI from the result.
 
-Basically, we log into the "manage" machine and build other instances while there.
+## How we create instances
 
-For each instance type, we have three forms of customization:
+We fire up each instance with the proper AMI, instance type, availability zone and security group.
 
-1. We decide upon an AWS instance type, security group, volumes, et cetera;
-2. We decide which packages to install; and
-3. We copy certain configuration files
+## How we maintain instances
 
-There's a clear "hierarchy" for both customizations: `database-staging` looks a lot like `database` but with a couple of different IP addresses, for instance.
-
-This logic is all coded in Ruby 1.8, because that's a dependency for EC2-management tools anyway.
+We run Ubuntu updates.
 
 ## Method naming
 
