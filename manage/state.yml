@@ -1,0 +1,5 @@
+---
+instances:
+- env: production
+  type: web
+  ip_address: 10.1.2.4
