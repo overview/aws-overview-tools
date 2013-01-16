@@ -31,7 +31,7 @@ end
 for image_class in [ ManageAwsImage, DatabaseAwsImage, WebAwsImage, WorkerAwsImage ]
   puts "Creating #{image_class.name}..."
   puts "Spinning up vanilla instance..."
-  instance = VanillaAwsInstance.new(:zone => 'us-east-1a', :arch => 'x86_64').create!
+  instance = VanillaAwsInstance.new(:zone => 'us-east-1a').create!
   unbuilt_image = image_class.new(:region => 'us-east-1', :arch => 'x86_64')
   image = unbuilt_image.build!(instance)
   puts "Created #{image_class.name}. AMI ID: #{image.ami_id}"

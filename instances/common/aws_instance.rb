@@ -9,20 +9,13 @@ class AwsInstance
     if ec2_instance_or_options.respond_to?(:id)
       @ec2_instance = ec2_instance_or_options
     else
-      @options = {
-        :arch => 'x86_64',
-        :instance_type => 'm1.small',
-        :security_group => 'default'
-      }.merge(ec2_instance_or_options)
+      @options = {}.merge(ec2_instance_or_options)
     end
   end
 
   def created!
-    if ec2_image
-      self
-    else
-      create!
-    end
+    create! if ec2_instance.nil?
+    self
   end
 
   def create!
@@ -64,20 +57,32 @@ class AwsInstance
   end
 
   def arch
-    ec2_instance && ec2_instance.architecture || @options[:arch].to_sym
+    ec2_instance && ec2_instance.architecture.to_s || @options[:arch] || default_arch
   end
 
   def instance_type
-    ec2_instance && ec2_instance.instance_type || @options[:instance_type]
+    ec2_instance && ec2_instance.instance_type || @options[:instance_type] || default_instance_type
+  end
+
+  def default_arch
+    'x86_64'
+  end
+
+  def default_instance_type
+    'm1.micro' # because if we make a mistake, it's a cheap one.
   end
 
   def ip_address
     ec2_instance_or_error.ip_address
   end
 
+  def private_ip_address
+    ec2_instance_or_error.private_ip_address
+  end
+
   protected
 
   def image_class
-    raise NotImplementedException.new('Implement image_class')
+    raise NotImplementedError.new('Implement image_class')
   end
 end
