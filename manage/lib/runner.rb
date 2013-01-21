@@ -2,18 +2,41 @@ require_relative 'commands/add_instance'
 require_relative 'commands/help'
 require_relative 'commands/remove_instance'
 require_relative 'commands/status'
+require_relative 'commands/fetch'
+require_relative 'commands/fetch_config'
+require_relative 'commands/checkout'
+require_relative 'commands/checkout_config'
+require_relative 'commands/build'
+require_relative 'commands/build_config'
+require_relative 'commands/copy'
+require_relative 'commands/copy_config'
+require_relative 'commands/deploy'
+require_relative 'commands/deploy_config'
+require_relative 'commands/restart'
 
 class Runner
-  attr_reader(:state, :commands)
+  attr_reader(:state, :instances, :repositories, :commands)
 
-  def initialize(state)
+  def initialize(state, repositories)
     @state = state
+    @repositories = repositories
 
     command_classes = [
       Commands::Status,
       Commands::AddInstance,
       Commands::RemoveInstance,
       Commands::Help,
+      Commands::Build,
+      Commands::BuildConfig,
+      Commands::Fetch,
+      Commands::FetchConfig,
+      Commands::Checkout,
+      Commands::CheckoutConfig,
+      Commands::Copy,
+      Commands::CopyConfig,
+      Commands::Deploy,
+      Commands::DeployConfig,
+      Commands::Restart
     ]
 
     # Turn into hash of { 'add-instance' => Commands::AddInstance.new }
@@ -24,6 +47,10 @@ class Runner
     "Usage: #{$0} COMMAND [ARG1...]\n\n" +
     "Where COMMAND is one of: #{@commands.keys.sort.join(' ')}\n\n" +
     "Type \"#{$0} help COMMAND\" for help with a command"
+  end
+
+  def instances
+    state.instances
   end
 
   def run(command_name, *args)

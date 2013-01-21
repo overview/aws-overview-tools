@@ -1,0 +1,19 @@
+---
+managed_code_path: /opt/overview/managed-code
+repositories:
+  main:
+    url: git@github.com:overview/overview-server.git
+    build_command: 'play dist'
+    # unzip args: "-j" junk paths for flat output dir; "-d" destination directory; "-q" quiet
+    export_command: 'unzip -q -j dist/overview*.zip "*.jar" -d #{DESTINATION_PATH}'
+    copy:
+      web: '*.jar'
+      worker: '*.jar'
+  config:
+    url: git@github.com:overview/aws-overview-config.git
+    build_command: 'generate.sh'
+    export_command: 'cp -a generated/* #{DESTINATION_PATH}'
+    copy:
+      web: '#{ENV}/web'
+      worker: '#{ENV}/worker'
+      database: '#{ENV}/database'

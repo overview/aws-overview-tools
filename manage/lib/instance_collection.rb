@@ -38,6 +38,10 @@ class InstanceCollection
     @instances.delete(real_instance) if real_instance
   end
 
+  def install
+    @instances.map(&:install)
+  end
+
   def with_env(env)
     InstanceCollection.new(@instances.select { |instance| instance.env == env })
   end
