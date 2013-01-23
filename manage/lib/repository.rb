@@ -87,11 +87,13 @@ class Repository
   end
 
   def fetch
+    puts "Fetching #{name} from git server..."
     repo.git.fetch(:timeout => 60)
   end
 
   def checkout(treeish)
-    repo.git.checkout({}, treeish)
+    puts "Resetting to #{treeish} branch"
+    repo.git.reset({}, '--hard', "origin/#{treeish}")
   end
 
   def build
