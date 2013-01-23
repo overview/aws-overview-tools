@@ -19,6 +19,7 @@ module Commands
       repository = runner.repositories['config']
       instances = runner.instances.with_searcher(searcher)
       repository.restart(instances)
+      "Restarted all Overview-specific services on #{instances.collect(&:to_s).join(' ')}"
     end
   end
 end

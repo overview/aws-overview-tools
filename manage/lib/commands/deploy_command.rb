@@ -27,6 +27,7 @@ module Commands
       repository.copy(searcher.env, instances)
       repository.install(instances)
       repository.restart(instances)
+      "Deployed #{repository_name} #{treeish} to #{instances.collect(&:to_s).join(' ')}"
     end
   end
 end

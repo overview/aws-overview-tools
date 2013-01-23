@@ -7,11 +7,14 @@ repositories:
     # unzip args: "-j" junk paths for flat output dir; "-d" destination directory; "-q" quiet
     export_command: 'unzip -q -j dist/overview*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy:
-      web: '*.jar'
-      worker: '*.jar'
+      web: ''
+      worker: ''
   config:
     url: git@github.com:overview/aws-overview-config.git
-    build_command: 'generate.sh'
+    build_command: '/opt/overview/managed-code/config/repo/generate.sh'
+    build_env:
+      OVERVIEW_SECRETS: /opt/overview/config/manage/secrets.yml
+      OVERVIEW_CONFIG: /opt/overview/config/manage/config.yml
     export_command: 'cp -a generated/* #{DESTINATION_PATH}'
     copy:
       web: '#{ENV}/web'

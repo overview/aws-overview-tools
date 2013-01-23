@@ -16,7 +16,7 @@ module Arguments
       error = false
 
       begin
-        searcher = Searcher.new(string)
+        searcher = ::Searcher.new(string)
       rescue ArgumentError
         error = true
       end

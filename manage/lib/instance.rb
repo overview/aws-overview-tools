@@ -13,6 +13,10 @@ class Instance
     end
   end
 
+  def to_s
+    "#{env}.#{type}.#{ip_address}"
+  end
+
   def to_hash
     {
       'env' => env,

@@ -56,9 +56,9 @@ class Repository
     @name = name
     @options = options
 
-    if !File.exist?("#{path}/.git")
-      FileUtils.mkdir_p(path)
-      Grit::Git.new(path).clone({ :timeout => 300 }, options['url'], repo_path)
+    if !File.exist?("#{repo_path}/.git")
+      FileUtils.mkdir_p(repo_path)
+      Grit::Git.new(repo_path).clone({ :raise => true, :timeout => 300 }, options['url'], repo_path)
     end
 
     @repo = Grit::Repo.new(repo_path)
@@ -96,8 +96,9 @@ class Repository
 
   def build
     command = options['build_command']
+    env = options['build_env'] || {}
     puts "Running #{command}..."
-    pid = spawn(command, :chdir => repo_path)
+    pid = spawn(env, command, :chdir => repo_path)
     raise RuntimeError.new("Build failed") if Process::wait2(pid)[1].exitstatus != 0
 
     out_path = export_path # cache
@@ -118,12 +119,22 @@ class Repository
       glob = glob.gsub('#{ENV}', env)
       glob = glob.gsub('#{TYPE}', type)
       ip_addresses.each do |ip_address|
-        puts "Uploading #{commit_path}/#{glob} to #{ip_address}:#{commit_path} ..."
-        Net::SCP.upload!(ip_address, 'ubuntu', "#{commit_path}/#{glob}", commit_path)
-        puts "Symlinking #{commit_path}/current on #{ip_address}"
+        puts "Connecting to #{env}.#{type} #{ip_address}"
         Net::SSH.start(ip_address, 'ubuntu') do |session|
           runner = SshRunner.new(session)
-          runner.exec("ln -sf #{commit_path} #{path}/current")
+
+          puts "Ensuring #{path} exists"
+          runner.exec("sudo mkdir -p /opt/overview")
+          runner.exec("sudo chown ubuntu:ubuntu /opt/overview")
+          runner.exec("mkdir -p #{path} /opt/overview/config")
+          runner.exec("rm -rf #{commit_path}-t")
+
+          puts "Uploading #{commit_path}/#{glob}"
+          session.scp.upload!("#{commit_path}/#{glob}", "#{commit_path}-t", :recursive => true) do |ch, name, sent, total|
+            puts "  uploaded #{name}" if sent == total
+          end
+
+          runner.exec("rm -rf #{commit_path} && mv #{commit_path}-t #{commit_path} && rm -f #{path}/current && ln -sf #{commit_path} #{path}/current")
         end
       end
     end
@@ -136,13 +147,14 @@ class Repository
   end
 
   def restart(instances)
-    start_script = "#{path}/current/start.sh"
+    start_script = "/opt/overview/managed-code/config/current/scripts/start.sh"
 
     instances.each do |instance|
       puts "Restarting #{instance.ip_address} (running #{start_script})"
       Net::SSH.start(instance.ip_address, 'ubuntu') do |session|
         runner = SshRunner.new(session)
-        runner.exec("#{start_script}")
+        runner.exec("sudo initctl reload-configuration")
+        runner.exec("sh #{start_script}")
       end
     end
   end
@@ -154,7 +166,7 @@ class Repository
     puts "Linking config files on #{ip_address} to / (root) -- can't be undone..."
     Net::SSH.start(ip_address, 'ubuntu') do |session|
       runner = SshRunner.new(session)
-      runner.exec("(cd #{path}/current/root && sudo find * -type f -exec ln -Pfv {} /{} \;)")
+      runner.exec("(cd #{path}/current/root && sudo find * -type f -exec ln -Pfv {} /{} \\;)")
     end
   end
 end
