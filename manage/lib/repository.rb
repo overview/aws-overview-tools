@@ -3,6 +3,8 @@ require 'fileutils'
 require 'grit'
 require 'net/scp'
 
+Grit.debug = true
+
 class SshRunner
   def initialize(session)
     @session = session
@@ -93,7 +95,10 @@ class Repository
 
   def checkout(treeish)
     puts "Resetting to #{treeish} branch"
-    repo.git.reset({}, '--hard', "origin/#{treeish}")
+    # Grit runs "git [command] [options]". We'd *like* to run "reset" with
+    # --work-tree=#{repo_path}, but git only accepts that option *before* the
+    # [command]. Instead, we'll set the chdir of the entire process.
+    repo.git.reset({ :chdir => repo_path }, '--hard', "origin/#{treeish}")
   end
 
   def build
