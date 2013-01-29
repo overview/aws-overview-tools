@@ -32,7 +32,7 @@ type = ARGV[0] || usage
 zone = ARGV[1] || usage
 
 require_relative "#{type}/#{type}_aws_instance"
-instance_class = Object.const_get("#{type[0].upcase + type[1..-1].downcase}AwsInstance")
+instance_class = Object.const_get("#{type.gsub(/(?:^|[-_])(\w)/) { $1.upcase }}AwsInstance")
 
 instance = instance_class.new(:zone => zone).created!
 puts "Waiting for new #{type} instance to start..."
