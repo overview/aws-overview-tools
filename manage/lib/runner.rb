@@ -13,6 +13,8 @@ require_relative 'commands/copy_config'
 require_relative 'commands/deploy'
 require_relative 'commands/deploy_config'
 require_relative 'commands/restart'
+require_relative 'commands/start'
+require_relative 'commands/stop'
 
 class Runner
   attr_reader(:state, :instances, :repositories, :commands)
@@ -36,7 +38,9 @@ class Runner
       Commands::CopyConfig,
       Commands::Deploy,
       Commands::DeployConfig,
-      Commands::Restart
+      Commands::Restart,
+      Commands::Start,
+      Commands::Stop
     ]
 
     # Turn into hash of { 'add-instance' => Commands::AddInstance.new }

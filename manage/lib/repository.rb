@@ -153,17 +153,30 @@ class Repository
     end
   end
 
-  def restart(instances)
-    start_script = "/opt/overview/managed-code/config/current/scripts/start.sh"
+  def script_path(start_or_stop)
+    "/opt/overview/managed-code/config/current/scripts/#{start_or_stop}.sh"
+  end
+
+  def run_script_on_instances(start_or_stop, instances)
+    script = script_path(start_or_stop)
 
     instances.each do |instance|
-      puts "Restarting #{instance.ip_address} (running #{start_script})"
+      puts "Running #{script} on #{instance}"
       Net::SSH.start(instance.ip_address, 'ubuntu') do |session|
         runner = SshRunner.new(session)
-        runner.exec("sudo initctl reload-configuration")
-        runner.exec("sh #{start_script}")
+        runner.exec('sudo initctl reload-configuration') # just in case
+        runner.exec("sh #{script}")
       end
     end
+  end
+
+  def restart(instances)
+    run_script_on_instances('start', instances)
+  end
+  alias start restart
+
+  def stop(instances)
+    run_script_on_instances('stop', instances)
   end
 
   protected
