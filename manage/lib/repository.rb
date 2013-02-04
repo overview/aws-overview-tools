@@ -98,7 +98,7 @@ class Repository
     # Grit runs "git [command] [options]". We'd *like* to run "reset" with
     # --work-tree=#{repo_path}, but git only accepts that option *before* the
     # [command]. Instead, we'll set the chdir of the entire process.
-    repo.git.reset({ :chdir => repo_path }, '--hard', "origin/#{treeish}")
+    repo.git.reset({ :chdir => repo_path }, '--hard', "#{treeish}")
   end
 
   def build
