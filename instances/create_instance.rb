@@ -37,11 +37,17 @@ instance_class = Object.const_get("#{type.gsub(/(?:^|[-_])(\w)/) { $1.upcase }}A
 instance = instance_class.new(:zone => zone).created!
 puts "Waiting for new #{type} instance to start..."
 sleep 1 while instance.ec2_instance.status != :running
+sleep 3 # for SSH to spin up
 puts "Instance started. Private IP address: #{instance.private_ip_address}"
+
+partial_type = type.split('_').first
+production_or_staging = type.split('_').last == 'staging' && 'staging' || 'production'
+specifier = "#{production_or_staging}.#{partial_type}.#{instance.private_ip_address}"
+
 puts ""
 puts "Your next steps:"
 puts ""
-puts "1. Log in to the new instance (through the manage instance) to set up its authorized_keys file."
-puts "2. Run overview-manage add-instance ENVIRONMENT.#{type}.#{instance.private_ip_address}"
-puts "3. Run overview-manage deploy-config ENVIRONMENT [VERSION]"
-puts "4. Run overview-manage deploy ENVIRONMENT [VERSION]"
+puts "1. overview-manage add-instance #{specifier}"
+puts "2. overview-manage ssh #{production_or_staging} #{partial_type} to accept its identity"
+puts "3. overview-manage deploy-config #{specifier} [CONFIG_VERSION]"
+puts "4. overview-manage deploy #{specifier} [OVERVIEW_VERSION]"
