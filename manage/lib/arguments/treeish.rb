@@ -7,12 +7,12 @@ module Arguments
     end
 
     def description
-      'is a git tree-ish identifier (e.g., "master", "a1cb321")'
+      'is a git tree-ish identifier (e.g., "origin/master", "a1cb321")'
     end
 
     def parse(runner, string)
       if string.nil? || string.empty?
-        'master'
+        'origin/master'
       else
         string
       end
