@@ -4,6 +4,7 @@ repositories:
   main:
     url: git@github.com:overview/overview-server.git
     build_command: 'play dist'
+    clean_command: 'play clean'
     # unzip args: "-j" junk paths for flat output dir; "-d" destination directory; "-q" quiet
     export_command: 'unzip -q -j dist/overview*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy:
@@ -12,6 +13,7 @@ repositories:
   config:
     url: git@github.com:overview/aws-overview-config.git
     build_command: '/opt/overview/managed-code/config/repo/generate.sh'
+    clean_command: 'rm -rv generated/'
     build_env:
       OVERVIEW_SECRETS: /opt/overview/config/manage/secrets.yml
       OVERVIEW_CONFIG: /opt/overview/config/manage/config.yml

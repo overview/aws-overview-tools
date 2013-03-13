@@ -8,6 +8,8 @@ require_relative 'commands/checkout'
 require_relative 'commands/checkout_config'
 require_relative 'commands/build'
 require_relative 'commands/build_config'
+require_relative 'commands/clean'
+require_relative 'commands/clean_config'
 require_relative 'commands/copy'
 require_relative 'commands/copy_config'
 require_relative 'commands/deploy'
@@ -30,6 +32,8 @@ class Runner
       Commands::Help,
       Commands::Build,
       Commands::BuildConfig,
+      Commands::Clean,
+      Commands::CleanConfig,
       Commands::Fetch,
       Commands::FetchConfig,
       Commands::Checkout,

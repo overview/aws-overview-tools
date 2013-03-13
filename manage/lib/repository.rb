@@ -101,6 +101,13 @@ class Repository
     repo.git.reset({ :chdir => repo_path }, '--hard', "#{treeish}")
   end
 
+  def clean
+    command = options['clean_command']
+    puts "Running #{command}..."
+    pid = spawn(env, command, :chdir => repo_path)
+    raise RuntimeError.new("Clean failed") if Process::wait2(pid)[1].exitstatus != 0
+  end
+
   def build
     command = options['build_command']
     env = options['build_env'] || {}
