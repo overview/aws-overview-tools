@@ -3,8 +3,8 @@ managed_code_path: /opt/overview/managed-code
 repositories:
   main:
     url: git@github.com:overview/overview-server.git
-    build_command: 'play dist'
-    clean_command: 'play clean'
+    build_command: 'play all/dist'
+    clean_command: 'play all/clean'
     # unzip args: "-j" junk paths for flat output dir; "-d" destination directory; "-q" quiet
     export_command: 'unzip -q -j dist/overview*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy:
