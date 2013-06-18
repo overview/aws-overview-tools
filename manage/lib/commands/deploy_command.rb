@@ -8,7 +8,7 @@ module Commands
       [ Arguments::Searcher.new, Arguments::Treeish.new ]
     end
 
-    def repository_name
+    def project_names
       raise NoMethodError.new
     end
 
@@ -17,17 +17,19 @@ module Commands
     end
 
     def run(runner, searcher, treeish)
-      repository = runner.repositories[repository_name]
-      repository.fetch
-      repository.checkout(treeish)
-      repository.build
+      project_names.each do |p| 
+        project = runner.projects[p]
+        project.fetch
+        project.checkout(treeish)
+        project.build
+        instances = runner.instances.with_searcher(searcher)
 
-      instances = runner.instances.with_searcher(searcher)
+        project.copy(searcher.env, instances)
+        project.install(instances)
+        project.restart(instances)
 
-      repository.copy(searcher.env, instances)
-      repository.install(instances)
-      repository.restart(instances)
-      "Deployed #{repository_name} #{treeish} to #{instances.collect(&:to_s).join(' ')}"
+        "Deployed #{repository_name} #{treeish} to #{instances.collect(&:to_s).join(' ')}"
+      end
     end
   end
 end

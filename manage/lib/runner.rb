@@ -19,11 +19,12 @@ require_relative 'commands/start'
 require_relative 'commands/stop'
 
 class Runner
-  attr_reader(:state, :instances, :repositories, :commands)
+  attr_reader(:state, :instances, :projects, :repositories, :commands)
 
-  def initialize(state, repositories)
+  def initialize(state, repositories, projects)
     @state = state
     @repositories = repositories
+    @projects = projects
 
     command_classes = [
       Commands::Status,
@@ -76,7 +77,6 @@ class Runner
       $stderr.puts command.usage
       exit(1)
     end
-
     puts command.run(self, *arguments)
   end
 

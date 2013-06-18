@@ -5,6 +5,52 @@ require 'net/scp'
 
 Grit.debug = true
 
+class SshRunner
+  def initialize(session)
+    @session = session
+  end
+
+  def log(label, message)
+    puts "[#{label.upcase}] #{message}"
+  end
+
+  def exec(command)
+    log('run', command)
+
+    status = nil
+
+    @session.open_channel do |channel|
+      channel.exec(command) do |ch, success|
+        if success
+          ch.on_data do |ch2, data|
+            log('stdout', data)
+          end
+
+          ch.on_extended_data do |ch2, type, data|
+            log('stderr', data)
+          end
+
+          ch.on_request('exit-status') do |ch, data|
+            status = data.read_long
+          end
+        else
+          raise Exception.new("Command could not be executed")
+        end
+      end
+    end
+
+    @session.loop { status.nil? }
+
+    msg = "Command exited with status #{status}"
+    if status != 0
+      raise Exception.new(msg)
+    else
+      log('run', msg)
+    end
+  end
+end
+
+
 class Project
   attr_reader(:managed_code_path, :name, :options, :repo)
 
@@ -86,28 +132,72 @@ class Project
 
     options['copy'].each do |type, glob|
       puts type
-    #   ip_addresses = instances.with_type(type).map(&:ip_address)
-    #   glob = glob.gsub('#{ENV}', env)
-    #   glob = glob.gsub('#{TYPE}', type)
-    #   ip_addresses.each do |ip_address|
-    #     puts "Connecting to #{env}.#{type} #{ip_address}"
-    #     Net::SSH.start(ip_address, 'ubuntu') do |session|
-    #       runner = SshRunner.new(session)
+      ip_addresses = instances.with_type(type).map(&:ip_address)
+      glob = glob.gsub('#{ENV}', env)
+      glob = glob.gsub('#{TYPE}', type)
+      ip_addresses.each do |ip_address|
+        puts "Connecting to #{env}.#{type} #{ip_address}"
+        Net::SSH.start(ip_address, 'ubuntu') do |session|
+          runner = SshRunner.new(session)
 
-    #       puts "Ensuring #{path} exists"
-    #       runner.exec("sudo mkdir -p /opt/overview")
-    #       runner.exec("sudo chown ubuntu:ubuntu /opt/overview")
-    #       runner.exec("mkdir -p #{path} /opt/overview/config")
-    #       runner.exec("rm -rf #{commit_path}-t")
+          puts "Ensuring #{path} exists"
+          runner.exec("sudo mkdir -p /opt/overview")
+          runner.exec("sudo chown ubuntu:ubuntu /opt/overview")
+          runner.exec("mkdir -p #{path} /opt/overview/config")
+          runner.exec("rm -rf #{commit_path}-t")
 
-    #       puts "Uploading #{commit_path}/#{glob}"
-    #       session.scp.upload!("#{commit_path}/#{glob}", "#{commit_path}-t", :recursive => true) do |ch, name, sent, total|
-    #         puts "  uploaded #{name}" if sent == total
-    #       end
+          puts "Uploading #{commit_path}/#{glob}"
+          session.scp.upload!("#{commit_path}/#{glob}", "#{commit_path}-t", :recursive => true) do |ch, name, sent, total|
+            puts "  uploaded #{name}" if sent == total
+          end
 
-    #       runner.exec("rm -rf #{commit_path} && mv #{commit_path}-t #{commit_path} && rm -f #{path}/current && ln -sf #{commit_path} #{path}/current")
-    #     end
-    #   end
+          runner.exec("rm -rf #{commit_path} && mv #{commit_path}-t #{commit_path} && rm -f #{path}/current && ln -sf #{commit_path} #{path}/current")
+        end
+      end
+    end
+  end
+
+  def install(instances)
+    if name == 'config'
+      instances.map { |i| install_config(i) }
+    end
+  end
+
+  def script_path(start_or_stop)
+    "/opt/overview/managed-code/config/current/scripts/#{start_or_stop}.sh"
+  end
+
+  def run_script_on_instances(start_or_stop, instances)
+    script = script_path(start_or_stop)
+
+    instances.each do |instance|
+      puts "Running #{script} on #{instance}"
+      Net::SSH.start(instance.ip_address, 'ubuntu') do |session|
+        runner = SshRunner.new(session)
+        runner.exec('sudo initctl reload-configuration') # just in case
+        runner.exec("sh #{script}")
+      end
+    end
+  end
+
+  def restart(instances)
+    run_script_on_instances('start', instances)
+  end
+  alias start restart
+
+  def stop(instances)
+    run_script_on_instances('stop', instances)
+  end
+
+
+  protected
+
+  def install_config(instance)
+    ip_address = instance.ip_address
+    puts "Linking config files on #{ip_address} to / (root) -- can't be undone..."
+    Net::SSH.start(ip_address, 'ubuntu') do |session|
+      runner = SshRunner.new(session)
+      runner.exec("(cd #{path}/current/root && sudo find * -type f -exec ln -Pfv {} /{} \\;)")
     end
   end
 
