@@ -28,7 +28,7 @@ module Commands
         project.install(instances)
         project.restart(instances)
 
-        "Deployed #{repository_name} #{treeish} to #{instances.collect(&:to_s).join(' ')}"
+        "Deployed #{p} #{treeish} to #{instances.collect(&:to_s).join(' ')}"
       end
     end
   end
