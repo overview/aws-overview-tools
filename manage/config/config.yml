@@ -4,24 +4,28 @@ projects:
   main:
     url: git@github.com:overview/overview-server.git
     build_command: 'play dist'
+    clean_command: 'play all/clean'
     export_command: 'unzip -q -j dist/overview*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy:
       web: ''
   worker:
     url: git@github.com:overview/overview-server.git
     build_command: 'play worker/simple-dist'
+    clean_command: 'play worker/clean'
     export_command: 'unzip -q -j worker/dist/worker*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy: 
       worker: ''
   documentset-worker:
     url: git@github.com:overview/overview-server.git
     build_command: 'play documentset-worker/simple-dist'
+    clean_command: 'play documentset-worker/clean'
     export_command: 'unzip -q -j documentset-worker/dist/documentset-worker*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy: 
       worker: ''
   message-broker:
     url: git@github.com:overview/overview-server.git
     build_command: 'play message-broker/simple-dist'
+    clean_command: 'play message-broker/clean'
     export_command: 'unzip -q -j message-broker/dist/message-broker*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy: 
       worker: ''

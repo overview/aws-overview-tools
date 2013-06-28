@@ -6,7 +6,7 @@ module Commands
       []
     end
 
-    def repository_name
+    def project_names
       raise NoMethodError.new
     end
 
@@ -15,8 +15,10 @@ module Commands
     end
 
     def run(runner)
-      repository = runner.repositories[repository_name]
-      repository.clean
+      project_names.each do |p| 
+        project = runner.projects[p]
+        project.clean
+      end
     end
   end
 end
