@@ -7,7 +7,7 @@ module Commands
     end
 
     def description
-      "Updates the managed git #{repository_name} repository"
+      "Updates the managed git repository for #{projects}"
     end
 
     def run_on_project(project)

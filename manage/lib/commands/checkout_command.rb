@@ -8,7 +8,7 @@ module Commands
     end
 
     def description
-      "Checks out the specified version of the #{repository} git repository for procesing."
+      "Checks out the specified version of git repository for processing for #{projects}."
     end
 
     def run_on_project(project, treeish)

@@ -7,7 +7,7 @@ module Commands
     end
 
     def description
-      "Cleans the #{repository} directory, assuming it exists."
+      "Cleans the directory for #{projects}"
     end
 
     def run_on_project(project)

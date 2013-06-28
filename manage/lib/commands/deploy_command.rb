@@ -8,12 +8,8 @@ module Commands
       [ Arguments::Searcher.new, Arguments::Treeish.new ]
     end
 
-    def project_names
-      raise NoMethodError.new
-    end
-
     def description
-      "Builds and deploys the specified version of the #{repository} git repository to the specified machines."
+      "Builds and deploys the specified version of the git repository to the specified machines for #{projects}."
     end
 
     def run(runner, searcher, treeish)

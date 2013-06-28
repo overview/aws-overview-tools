@@ -9,7 +9,7 @@ module Commands
     end
 
     def description
-      "Builds and copies the specified version of the #{repository} git repository to the specified machines."
+      "Builds and copies the specified version of the git repository to the specified machines for #{projects}."
     end
 
     def run_on_project(project, searcher, treeish)

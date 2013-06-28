@@ -8,6 +8,10 @@ class ProjectCommand < Command
     raise NoMethodError.new
   end
 
+  def projects
+    project_names.join(', ')
+  end
+
   def run(runner, *args)
     project_names.each do |p|
       project = runner.projects[p]
