@@ -16,9 +16,9 @@ module Commands
     end
 
     def run(runner, searcher)
-      repository = runner.repositories['config']
+      project = runner.projects['config']
       instances = runner.instances.with_searcher(searcher)
-      repository.stop(instances)
+      project.stop(instances)
       "Stopped all Overview-specific services (not Postgres) on #{instances.collect(&:to_s).join(' ')}"
     end
   end

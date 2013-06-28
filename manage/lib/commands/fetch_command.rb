@@ -1,22 +1,17 @@
-require_relative '../command'
+require_relative '../project_command'
 
 module Commands
-  class FetchCommand < Command
+  class FetchCommand < ProjectCommand
     def arguments_schema
       []
-    end
-
-    def repository_name
-      raise NoMethodError.new
     end
 
     def description
       "Updates the managed git #{repository_name} repository"
     end
 
-    def run(runner)
-      repository = runner.repositories[repository_name]
-      repository.fetch
+    def run_on_project(project)
+      project.fetch
     end
   end
 end

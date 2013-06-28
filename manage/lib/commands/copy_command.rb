@@ -1,27 +1,24 @@
 require_relative '../arguments/searcher'
 require_relative '../arguments/treeish'
-require_relative '../command'
+require_relative '../project_command'
 
 module Commands
-  class CopyCommand < Command
+  class CopyCommand < ProjectCommand
     def arguments_schema
       [ Arguments::Searcher.new, Arguments::Treeish.new ]
-    end
-
-    def repository_name
-      raise NoMethodError.new
     end
 
     def description
       "Builds and copies the specified version of the #{repository} git repository to the specified machines."
     end
 
-    def run(runner, searcher, treeish)
-      repository = runner.repositories[repository_name]
-      repository.fetch
-      repository.checkout(treeish)
-      repository.build
-      repository.copy(searcher.env, runner.instances.with_searcher(searcher))
+    def run_on_project(project, searcher, treeish)
+      project.fetch
+      project.checkout(treeish)
+      project.build
+      instances = runner.instances.with_searcher(searcher)
+
+      project.copy(searcher.env, instances)
     end
   end
 end

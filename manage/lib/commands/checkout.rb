@@ -6,8 +6,8 @@ module Commands
       'checkout'
     end
 
-    def repository_name
-      'main'
+    def project_names
+      ['main', 'worker', 'documentset-worker', 'message-broker']
     end
   end
 end

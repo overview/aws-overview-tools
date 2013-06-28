@@ -6,8 +6,8 @@ module Commands
       'checkout-config'
     end
 
-    def repository_name
-      'config'
+    def project_names
+      ['config']
     end
   end
 end
