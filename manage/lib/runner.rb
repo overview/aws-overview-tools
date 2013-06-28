@@ -19,11 +19,10 @@ require_relative 'commands/start'
 require_relative 'commands/stop'
 
 class Runner
-  attr_reader(:state, :instances, :projects, :repositories, :commands)
+  attr_reader(:state, :instances, :projects, :commands)
 
-  def initialize(state, repositories, projects)
+  def initialize(state, projects)
     @state = state
-    @repositories = repositories
     @projects = projects
 
     command_classes = [
