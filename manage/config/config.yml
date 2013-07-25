@@ -29,6 +29,13 @@ projects:
     export_command: 'unzip -q -j message-broker/dist/message-broker*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy: 
       worker: ''
+  search-index:
+    url: git@github.com:overview/overview-server.git
+    build_command: 'play search-index/simple-dist'
+    clean_command: 'play search-index/clean'
+    export_command: 'unzip -q -j search-index/dist/search-index*.zip "*.jar" -d #{DESTINATION_PATH}'
+    copy: 
+      searchindex: ''
   config:
     url: git@github.com:overview/aws-overview-config.git
     build_command: '/opt/overview/managed-code/config/repo/generate.sh'
@@ -41,6 +48,7 @@ projects:
       web: '#{ENV}/web'
       worker: '#{ENV}/worker'
       database: '#{ENV}/database'
+      searchindex: '#{ENV}/searchindex'
 
 
   
