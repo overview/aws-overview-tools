@@ -3,36 +3,36 @@ managed_code_path: /opt/overview/managed-code
 projects:
   main:
     url: git@github.com:overview/overview-server.git
-    build_command: 'play dist'
-    clean_command: 'play all/clean'
+    build_command: './sbt dist'
+    clean_command: './sbt all/clean'
     export_command: 'unzip -q -j dist/overview*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy:
       web: ''
   worker:
     url: git@github.com:overview/overview-server.git
-    build_command: 'play worker/simple-dist'
-    clean_command: 'play all/clean'
+    build_command: './sbt worker/simple-dist'
+    clean_command: './sbt all/clean'
     export_command: 'unzip -q -j worker/dist/worker*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy: 
       worker: ''
   documentset-worker:
     url: git@github.com:overview/overview-server.git
-    build_command: 'play documentset-worker/simple-dist'
-    clean_command: 'play all/clean'
+    build_command: './sbt documentset-worker/simple-dist'
+    clean_command: './sbt all/clean'
     export_command: 'unzip -q -j documentset-worker/dist/documentset-worker*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy: 
       worker: ''
   message-broker:
     url: git@github.com:overview/overview-server.git
-    build_command: 'play message-broker/simple-dist'
-    clean_command: 'play message-broker/clean'
+    build_command: './sbt message-broker/simple-dist'
+    clean_command: './sbt message-broker/clean'
     export_command: 'unzip -q -j message-broker/dist/message-broker*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy: 
       worker: ''
   search-index:
     url: git@github.com:overview/overview-server.git
-    build_command: 'play search-index/simple-dist'
-    clean_command: 'play search-index/clean'
+    build_command: './sbt search-index/simple-dist'
+    clean_command: './sbt search-index/clean'
     export_command: 'unzip -q -j search-index/dist/search-index*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy: 
       searchindex: ''
@@ -55,8 +55,8 @@ projects:
 repositories:
   main:
     url: git@github.com:overview/overview-server.git
-    build_command: 'play all/dist'
-    clean_command: 'play all/clean'
+    build_command: './sbt all/dist all/simple-dist'
+    clean_command: './sbt all/clean'
     # unzip args: "-j" junk paths for flat output dir; "-d" destination directory; "-q" quiet
     export_command: 'unzip -q -j dist/overview*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy:
