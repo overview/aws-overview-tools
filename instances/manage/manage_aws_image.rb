@@ -7,7 +7,7 @@ class ManageAwsImage < AwsImage
     super + [
       'git',
       'unzip',
-      'openjdk-6-jdk',
+      'openjdk-7-jdk',
       'ruby'
     ]
   end
