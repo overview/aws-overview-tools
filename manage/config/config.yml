@@ -5,7 +5,7 @@ projects:
     url: git@github.com:overview/overview-server.git
     build_command: './sbt dist'
     clean_command: './sbt all/clean'
-    export_command: 'unzip -q -j dist/overview*.zip "*.jar" -d #{DESTINATION_PATH}'
+    export_command: 'unzip -q -j target/universal/overview*.zip "*.jar" -d #{DESTINATION_PATH}'
     copy:
       web: ''
   worker:
