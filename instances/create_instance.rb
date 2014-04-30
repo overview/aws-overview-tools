@@ -15,9 +15,12 @@
 
 require 'bundler/setup'
 
-ENV['AWS_ACCESS_KEY_ID'] = `cat ~/.aws/aws-credential-file.txt | grep AWSAccessKeyId | cut -d '=' -f 2`.strip
-ENV['AWS_SECRET_ACCESS_KEY'] = `cat ~/.aws/aws-credential-file.txt | grep AWSSecretKey | cut -d '=' -f 2`.strip
-
+if !ENV['AWS_ACCESS_KEY_ID']
+  raise Exception.new("You must specify the AWS_ACCESS_KEY_ID environment variable.")
+end
+if !ENV['AWS_SECRET_ACCESS_KEY']
+  raise Exception.new("You must specify the AWS_SECRET_ACCESS_KEY environment variable.")
+end
 if !ENV['AWS_KEYPAIR_NAME']
   raise Exception.new("You must specify the AWS_KEYPAIR_NAME environment variable. It should be a keypair you can access.")
 end
