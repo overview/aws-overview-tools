@@ -1,3 +1,19 @@
+# Using this package
+
+This tool does two things:
+
+* It creates Amazon Machine Images (AMIs). Each AMI represents a server configuration: we may spin up multiple instances of each server configuration.
+* It spins up AMIs into new Instances. Each Instance is a server: a virtual machine.
+
+Here's how to use it:
+
+1. Create all the amazon machine images (only do this once!):
+    1. `export AWS_CREDENTIAL_FILE=[your credentials] AWS_ACCESS_KEY_ID=[whatever] AWS_SECRET_ACCESS_KEY=[whatever] && ./build_images.rb` ([find your keypair](https://console.aws.amazon.com/ec2/v2/home#KeyPairs:)) ([find your access key](https://console.aws.amazon.com/iam/home#users) and [read more about credentials](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-installing-credentials))
+    1. Log into AWS and delete all the running instances. (You may test them before turning them off, but they're costing money.)
+
+1. Spin up an instance
+    1. `./create_instance.rb TYPE ZONE` -- see `create_instance.rb`'s comments
+
 # Instances
 
 Under this directory are all the scripts and configuration files we use to create AMI images.

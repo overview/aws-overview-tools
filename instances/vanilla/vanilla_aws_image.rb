@@ -5,7 +5,7 @@ require 'httparty'
 
 require_relative '../common/aws_image'
 
-BASE_AMI_LISTINGS = 'http://cloud-images.ubuntu.com/releases/precise/release/'
+BASE_AMI_LISTINGS = 'http://cloud-images.ubuntu.com/releases/trusty/release/'
 
 # Represents the "vanilla" image -- i.e., vanilla Ubuntu
 class VanillaAwsImage < AwsImage

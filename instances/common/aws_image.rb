@@ -136,7 +136,9 @@ class AwsImage
     # I don't know why, but we seem to need to do this again. (Is it because GPG updates?)
     ssh.exec("sudo apt-get -q update")
     ssh.exec("sudo DEBIAN_FRONTEND=noninteractive apt-get -q -y dist-upgrade")
-    ssh.exec("sudo DEBIAN_FRONTEND=noninteractive apt-get -q -y install #{packages.join(' ')}")
+    if !packages.empty?
+      ssh.exec("sudo DEBIAN_FRONTEND=noninteractive apt-get -q -y install #{packages.join(' ')}")
+    end
   end
 
   def base_ami_id
