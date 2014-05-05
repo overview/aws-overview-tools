@@ -39,9 +39,9 @@ Let's sum that up. Here's where things are stored:
 | Bunch of files | Key properties | Where it is | What you can do with it |
 | -------------- | -------------- | ----------- | ----------------------- |
 | source | URL | the `manage` instance, `/opt/overview/manage/sources/SOURCE.git` (bare GitHub clone) | *build* at a given version |
-| source artifact | version | the `manage` instance, `/opt/overview/manage/artifacts/SOURCE/VERSION/` | *publish* to all machines of a certain type, or to all machines |
-| component artifact | source, version | each *machine* with that *component*, `/opt/overview/manage/components/COMPONENT/VERSION/` | *install* |
-| installed component artifact | source, version | each *machine* with that *component*, usually a symlink, `/opt/overview/COMPONENT/current` | *start*, *stop*, *restart* |
+| source artifact | version | the `manage` instance, `/opt/overview/manage/source-artifacts/SOURCE/VERSION/` | *publish* to all machines of a certain type, or to all machines |
+| component artifact | source, version | the `manage` instance _and_ each *machine* with that *component*, `/opt/overview/manage/component-artifacts/COMPONENT/VERSION/` | *install* |
+| installed component artifact | source, version | each *machine* with that *component*, usually a symlink, `/opt/overview/COMPONENT` | *start*, *stop*, *restart* |
 
 ... also, you can verify that each bunch of files is valid. Indeed, we verify artifacts rigorously. (The most likely corruption comes from a broken file transfer. Every time we transfer an artifact we begin with a checksum file that contains all files and their md5sums; every step, we verify the md5sum from the step before.)
 
@@ -50,5 +50,5 @@ Let's sum that up. Here's where things are stored:
 You need Ruby >= 1.9.2. (You get bonus points for using Ruby >= 2.0.0.)
 
     bundle install
-    bundle exec guard start
+    bundle exec guard
     # and then edit code

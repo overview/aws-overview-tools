@@ -12,16 +12,28 @@ class Source
     end
   end
 
-  attr_reader(:name, :url)
+  attr_reader(:name, :url, :build_commands)
 
   def initialize(hash_or_instance)
     if hash_or_instance.is_a?(Hash)
       @name = hash_or_instance['name'] || hash_or_instance[:name]
       @url = hash_or_instance['url'] || hash_or_instance[:url]
+      @build_commands = hash_or_instance['build_commands'] || hash_or_instance[:build_commands] || []
+      @build_remotely = hash_or_instance['build_remotely'] || hash_or_instance[:build_remotely] || false
     else
       @name = hash_or_instance.name
       @url = hash_or_instance.url
+      @build_commands = hash_or_instance.build_commands
     end
+  end
+
+  def self.from_yaml(name, yaml)
+    hash = { name: name }.update(yaml)
+    Source.new(hash)
+  end
+
+  def build_remotely?
+    @build_remotely
   end
 
   def to_hash

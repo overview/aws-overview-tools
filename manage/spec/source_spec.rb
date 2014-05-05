@@ -1,4 +1,5 @@
 require 'source'
+require 'yaml'
 
 module MockGit
   class Base
@@ -52,6 +53,29 @@ RSpec.describe 'Source' do
     expect(MockFileUtils).to receive(:mkdir_p).with(path).and_return([])
     expect(MockGit::Base).to receive(:clone).with(@subject.url, @subject.name, bare: true, path: path).and_return(repository: path)
     @subject.fetch
+  end
+
+  it 'should default to empty build_commands' do
+    expect(@subject.build_commands).to eq([])
+  end
+
+  it 'should default to false build_remotely?' do
+    expect(@subject.build_remotely?).to eq(false)
+  end
+
+  it 'should initialize from YAML' do
+    yaml = YAML.load("""---
+      overview-server:
+        url: https://github.com/overview/overview-server.git
+        build_remotely: true
+        build_commands:
+          - ./build archive.zip
+      """)
+    source = Source.from_yaml('key', yaml['overview-server'])
+    expect(source.name).to eq('key')
+    expect(source.url).to eq('https://github.com/overview/overview-server.git')
+    expect(source.build_commands).to eq([ './build archive.zip' ])
+    expect(source.build_remotely?).to eq(true)
   end
 
   it 'should use the repo when it already exists' do
