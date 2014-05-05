@@ -1,3 +1,5 @@
+require 'digest'
+
 # A compiled source-code artifact.
 #
 # A SourceArtifact must persist from build to build. That means all metadata

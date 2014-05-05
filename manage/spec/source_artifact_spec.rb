@@ -3,14 +3,7 @@ require 'fileutils'
 
 require 'source_artifact'
 
-RSpec.describe 'SourceArtifact' do
-  class MockSource
-    attr_reader(:name)
-
-    def initialize(name)
-      @name = name
-    end
-  end
+RSpec.describe SourceArtifact do
 
   ZipContents = Base64.decode64('''
     UEsDBAoAAAAAAKRSpUTVotyLBgAAAAYAAAAHABwAZm9vLnR4dFVUCQADU55nU1OeZ1N1eAsAAQTo
@@ -21,6 +14,14 @@ RSpec.describe 'SourceArtifact' do
   ZipMd5sum = 'fde3b19cdf36019e93c26444bc895b18'
 
   it 'should choose a good path' do
+    class MockSource
+      attr_reader(:name)
+
+      def initialize(name)
+        @name = name
+      end
+    end
+
     source = MockSource.new('source')
     artifact = SourceArtifact.new(source, 'abcdef')
 
