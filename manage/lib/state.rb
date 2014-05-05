@@ -3,6 +3,7 @@ require 'yaml/store'
 
 require_relative 'instance_collection'
 
+# Stores system state between runs
 class State
   attr_reader(:instances)
 
