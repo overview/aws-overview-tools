@@ -47,8 +47,17 @@ class Source
     repo.fetch
   end
 
+  def revparse(treeish)
+    repo.revparse(treeish)
+  end
+
+  # Returns a Tempfile which is a tarball git repo's files in the directory
+  # "checkout/"
   def archive(treeish)
     object = repo.object(treeish)
+    sha = object.sha
+    file = object.archive(nil, format: 'tgz')
+    SourceArchive.new(object.sha, file)
   end
 
   private
