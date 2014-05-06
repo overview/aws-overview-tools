@@ -154,28 +154,22 @@ RSpec.describe Operations::Build do
       end
     end
 
-    it 'should return a source_artifact' do
-      source_artifact = @subject.run
-      expect(source_artifact).to be_a(MockSourceArtifact)
-    end
+    describe 'with the SourceArtifact .run returns' do
+      subject { @subject.run }
 
-    it 'should set the source_artifact sha according to Source.archive' do
-      source_artifact = @subject.run
-      expect(source_artifact.sha).to eq('abcdef')
-    end
+      it { expect(subject).to be_a(MockSourceArtifact) }
+      it { expect(subject.sha).to eq('abcdef') }
+      it { expect(subject.source).to eq('source-name') }
 
-    it 'should put archive.zip in source_artifact' do
-      source_artifact = @subject.run
+      it 'should put archive.zip in source_artifact' do
+        zip = open(subject.zip_path, 'rb') { |f| f.read() }
+        expect(zip).to eq(ZipContents)
+      end
 
-      zip = open(source_artifact.zip_path, 'rb') { |f| f.read() }
-      expect(zip).to eq(ZipContents)
-    end
-
-    it 'should add archive.md5sum in source_artifact' do
-      source_artifact = @subject.run
-
-      md5sum = open(source_artifact.md5sum_path, 'rb') { |f| f.read() }
-      expect(md5sum).to eq(Digest::MD5.new.hexdigest(ZipContents))
+      it 'should add archive.md5sum in source_artifact' do
+        md5sum = open(subject.md5sum_path, 'rb') { |f| f.read() }
+        expect(md5sum).to eq(Digest::MD5.new.hexdigest(ZipContents))
+      end
     end
   end
 end

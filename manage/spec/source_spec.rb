@@ -1,4 +1,5 @@
 require 'source'
+
 require 'yaml'
 
 module MockGit

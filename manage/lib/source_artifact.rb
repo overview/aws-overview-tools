@@ -11,16 +11,6 @@ require 'digest'
 #
 # * #{path}/artifact.zip: the built Source.
 # * #{path}/artifact.md5sum: an md5sum.
-#
-# When building a SourceArtifact, don't assume it's there already. Consider
-# it a cached value: if it's there you can use it; if it isn't there, you need
-# to build it.
-#
-# 1. `source_artifact = SourceArtifact.new(source, sha)`
-# 2. `source_artifact.verify`
-# 3. If `.verify` is false, rebuild: rm_r `source_artifact.path`, recreate
-#    it and write new `artifact.zip` and `artifact.md5sum` to
-#    `source_artifact.zip_path` and `source_artifact.md5sum_path`
 class SourceArtifact
   attr_reader(:source, :sha)
 
@@ -32,7 +22,7 @@ class SourceArtifact
 
   def path
     root = @options[:root] || "/opt/overview/manage/source-artifacts"
-    "#{root}/#{source.name}/#{sha}"
+    "#{root}/#{source}/#{sha}"
   end
 
   def zip_path

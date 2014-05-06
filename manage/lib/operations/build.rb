@@ -56,7 +56,7 @@ module Operations
     end
 
     def run
-      source_artifact = SourceArtifact.new(@source, sha)
+      source_artifact = SourceArtifact.new(@source.name, sha)
 
       if !source_artifact.valid?
         FileUtils.remove_entry(source_artifact.path)

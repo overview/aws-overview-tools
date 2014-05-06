@@ -39,11 +39,10 @@ Let's sum that up. Here's where things are stored:
 | Bunch of files | Key properties | Where it is | What you can do with it |
 | -------------- | -------------- | ----------- | ----------------------- |
 | source | URL | the `manage` instance, `/opt/overview/manage/sources/SOURCE.git` (bare GitHub clone) | *build* at a given version |
-| source artifact | version | the `manage` instance, `/opt/overview/manage/source-artifacts/SOURCE/VERSION/` | *publish* to all machines of a certain type, or to all machines |
-| component artifact | source, version | the `manage` instance _and_ each *machine* with that *component*, `/opt/overview/manage/component-artifacts/COMPONENT/VERSION/` | *install* |
-| installed component artifact | source, version | each *machine* with that *component*, usually a symlink, `/opt/overview/COMPONENT` | *start*, *stop*, *restart* |
-
-... also, you can verify that each bunch of files is valid. Indeed, we verify artifacts rigorously. (The most likely corruption comes from a broken file transfer. Every time we transfer an artifact we begin with a checksum file that contains all files and their md5sums; every step, we verify the md5sum from the step before.)
+| source artifact | version | the `manage` instance, `/opt/overview/manage/source-artifacts/SOURCE/VERSION/` | *prepare* to publish; *verify* |
+| (manage) component artifact | source, version, environment | the `manage` instance, `/opt/overview/manage/component-artifacts/COMPONENT/VERSION/ENVIRONMENT` | *publish* to all relevant machines; *verify* |
+| (machine) component artifact | source, version, environment | each *machine* with that *component*, `/opt/overview/manage/component-artifacts/COMPONENT/VERSION/ENVIRONMENT` (same exact files as on `manage`) | *install*; *verify* |
+| installed component artifact | | each *machine* with that *component*, usually a symlink, `/opt/overview/COMPONENT` | *start*, *stop*, *restart* |
 
 # Development
 
