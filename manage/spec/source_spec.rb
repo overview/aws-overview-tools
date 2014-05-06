@@ -65,13 +65,13 @@ RSpec.describe 'Source' do
   end
 
   it 'should initialize from YAML' do
-    yaml = YAML.load("""---
+    yaml = YAML.load("---
       overview-server:
         url: https://github.com/overview/overview-server.git
         build_remotely: true
         build_commands:
           - ./build archive.zip
-      """)
+      ")
     source = Source.from_yaml('key', yaml['overview-server'])
     expect(source.name).to eq('key')
     expect(source.url).to eq('https://github.com/overview/overview-server.git')
