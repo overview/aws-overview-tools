@@ -4,14 +4,15 @@ require 'fileutils'
 require 'source_artifact'
 
 RSpec.describe SourceArtifact do
+  module SourceArtifactConstants
+    ZipContents = Base64.decode64('''
+      UEsDBAoAAAAAAKRSpUTVotyLBgAAAAYAAAAHABwAZm9vLnR4dFVUCQADU55nU1OeZ1N1eAsAAQTo
+      AwAABOgDAAAiYmFyIgpQSwECHgMKAAAAAACkUqVE1aLciwYAAAAGAAAABwAYAAAAAAABAAAAtIEA
+      AAAAZm9vLnR4dFVUBQADU55nU3V4CwABBOgDAAAE6AMAAFBLBQYAAAAAAQABAE0AAABHAAAAAAA=
+    ''')
 
-  ZipContents = Base64.decode64('''
-    UEsDBAoAAAAAAKRSpUTVotyLBgAAAAYAAAAHABwAZm9vLnR4dFVUCQADU55nU1OeZ1N1eAsAAQTo
-    AwAABOgDAAAiYmFyIgpQSwECHgMKAAAAAACkUqVE1aLciwYAAAAGAAAABwAYAAAAAAABAAAAtIEA
-    AAAAZm9vLnR4dFVUBQADU55nU3V4CwABBOgDAAAE6AMAAFBLBQYAAAAAAQABAE0AAABHAAAAAAA=
-  ''')
-
-  ZipMd5sum = 'fde3b19cdf36019e93c26444bc895b18'
+    ZipMd5sum = 'fde3b19cdf36019e93c26444bc895b18'
+  end
 
   it 'should choose a good path' do
     artifact = SourceArtifact.new('source', 'abcdef')
@@ -32,24 +33,24 @@ RSpec.describe SourceArtifact do
     end
 
     it 'should not valid? if artifact.zip is missing' do
-      open("#{@artifact.path}/archive.md5sum", 'wb') { |f| f.write(ZipMd5sum) }
+      open("#{@artifact.path}/archive.md5sum", 'wb') { |f| f.write(SourceArtifactConstants::ZipMd5sum) }
       expect(@artifact.valid?).to be(false)
     end
 
     it 'should not valid? if artifact.md5sum is missing' do
-      open("#{@artifact.path}/archive.zip", 'wb') { |f| f.write(ZipContents) }
+      open("#{@artifact.path}/archive.zip", 'wb') { |f| f.write(SourceArtifactConstants::ZipContents) }
       expect(@artifact.valid?).to be(false)
     end
 
     it 'should not valid? if artifact.md5sum does not match artifact.zip' do
-      open("#{@artifact.path}/archive.zip", 'wb') { |f| f.write(ZipContents) }
-      open("#{@artifact.path}/archive.md5sum", 'wb') { |f| f.write(ZipMd5sum.tr('f', 'a')) }
+      open("#{@artifact.path}/archive.zip", 'wb') { |f| f.write(SourceArtifactConstants::ZipContents) }
+      open("#{@artifact.path}/archive.md5sum", 'wb') { |f| f.write(SourceArtifactConstants::ZipMd5sum.tr('f', 'a')) }
       expect(@artifact.valid?).to be(false)
     end
 
     it 'should valid? if artifact.md5sum matches artifact.zip' do
-      open("#{@artifact.path}/archive.zip", 'wb') { |f| f.write(ZipContents) }
-      open("#{@artifact.path}/archive.md5sum", 'wb') { |f| f.write(ZipMd5sum) }
+      open("#{@artifact.path}/archive.zip", 'wb') { |f| f.write(SourceArtifactConstants::ZipContents) }
+      open("#{@artifact.path}/archive.md5sum", 'wb') { |f| f.write(SourceArtifactConstants::ZipMd5sum) }
       expect(@artifact.valid?).to be(true)
     end
   end
