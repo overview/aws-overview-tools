@@ -40,8 +40,8 @@ Let's sum that up. Here's where things are stored:
 | -------------- | -------------- | ----------- | ----------------------- |
 | source | URL | the `manage` instance, `/opt/overview/manage/sources/SOURCE.git` (bare GitHub clone) | *build* at a given version |
 | source artifact | version | the `manage` instance, `/opt/overview/manage/source-artifacts/SOURCE/VERSION/` | *prepare* to publish; *verify* |
-| (manage) component artifact | source, version, environment | the `manage` instance, `/opt/overview/manage/component-artifacts/COMPONENT/VERSION/ENVIRONMENT` | *publish* to all relevant machines; *verify* |
-| (machine) component artifact | source, version, environment | each *machine* with that *component*, `/opt/overview/manage/component-artifacts/COMPONENT/VERSION/ENVIRONMENT` (same exact files as on `manage`) | *install*; *verify* |
+| (manage) component artifact | component, version, environment | the `manage` instance, `/opt/overview/manage/component-artifacts/COMPONENT/VERSION/ENVIRONMENT` | *publish* to all relevant machines; *verify* |
+| (machine) component artifact | component, version, environment | each *machine* with that *component*, `/opt/overview/manage/component-artifacts/COMPONENT/VERSION/ENVIRONMENT` (same exact files as on `manage`) | *install*; *verify* |
 | installed component artifact | | each *machine* with that *component*, usually a symlink, `/opt/overview/COMPONENT` | *start*, *stop*, *restart* |
 
 # Development

@@ -1,76 +1,65 @@
 ---
-managed_code_path: /opt/overview/managed-code
-projects:
-  main:
-    url: git@github.com:overview/overview-server.git
-    build_command: './sbt dist'
-    clean_command: './sbt all/clean'
-    export_command: 'unzip -q -j target/universal/overview*.zip "*.jar" -d #{DESTINATION_PATH}'
-    copy:
-      web: ''
+sources:
+  overview-server:
+    url: https://github.com/overview/overview-server.git
+    build_remotely: true
+    build_commands:
+      - ./build archive.zip
+
+  aws-overview-config:
+    url: https://github.com/overview/aws-overview-config.git
+    build_env:
+      OVERVIEW_SECRETS: /opt/overview/config/manage/secrets.yml
+      OVERVIEW_CONFIG: /opt/overview/config/manage/config.yml
+    build_commands:
+      - OVERVIEW_CONFIG=/opt/overview/config/manage/config.yml OVERVIEW_SECRETS=/opt/overview/config/manage/secrets.yml ./generate.sh
+      - zip -r archive.zip generated
+
+build_overview_server_component: &build_overview_server_component
+  source: overview-server
+  build_commands:
+    - "unzip #{source_artifact.archive_zip}"
+    - "cd archive/lib"
+    - "xargs -I '{}' -a ../#{component.name}/classpath.txt ln '{}' #{component_artifact.contents_path}"
+
+build_config_component: &build_config_component
+  source: aws-overview-config
+  build_commands:
+    - "unzip #{source_artifact.archive_zip}"
+    - "cd archive/generated"
+    - "cp -a #{component.name[7..-1]}/* #{component_artifact.contents_path}"
+  install_commands:
+    - "cp -a #{component_artifact.path}/root/* /"
+  post_install_commands:
+    - "#{component_artifact.path}/scripts/start.sh"
+
+components:
+  frontend:
+    <<: *build_overview_server_component
+    post_install_commands:
+      - /opt/overview/config-web/scripts/start.sh
   worker:
-    url: git@github.com:overview/overview-server.git
-    build_command: './sbt worker/simple-dist'
-    clean_command: './sbt all/clean'
-    export_command: 'unzip -q -j worker/dist/worker*.zip "*.jar" -d #{DESTINATION_PATH}'
-    copy: 
-      worker: ''
+    <<: *build_overview_server_component
+    post_install_commands:
+      - /opt/overview/config-worker/scripts/start.sh
   documentset-worker:
-    url: git@github.com:overview/overview-server.git
-    build_command: './sbt documentset-worker/simple-dist'
-    clean_command: './sbt all/clean'
-    export_command: 'unzip -q -j documentset-worker/dist/documentset-worker*.zip "*.jar" -d #{DESTINATION_PATH}'
-    copy: 
-      worker: ''
+    <<: *build_overview_server_component
+    post_install_commands:
+      - /opt/overview/config-worker/scripts/start.sh
   message-broker:
-    url: git@github.com:overview/overview-server.git
-    build_command: './sbt message-broker/simple-dist'
-    clean_command: './sbt message-broker/clean'
-    export_command: 'unzip -q -j message-broker/dist/message-broker*.zip "*.jar" -d #{DESTINATION_PATH}'
-    copy: 
-      worker: ''
+    <<: *build_overview_server_component
+    post_install_commands:
+      - /opt/overview/config-worker/scripts/start.sh
   search-index:
-    url: git@github.com:overview/overview-server.git
-    build_command: './sbt search-index/simple-dist'
-    clean_command: './sbt search-index/clean'
-    export_command: 'unzip -q -j search-index/dist/search-index*.zip "*.jar" -d #{DESTINATION_PATH}'
-    copy: 
-      searchindex: ''
-  config:
-    url: git@github.com:overview/aws-overview-config.git
-    build_command: '/opt/overview/managed-code/config/repo/generate.sh'
-    clean_command: 'rm -rv generated/'
-    build_env:
-      OVERVIEW_SECRETS: /opt/overview/config/manage/secrets.yml
-      OVERVIEW_CONFIG: /opt/overview/config/manage/config.yml
-    export_command: 'cp -a generated/* #{DESTINATION_PATH}'
-    copy:
-      web: '#{ENV}/web'
-      worker: '#{ENV}/worker'
-      database: '#{ENV}/database'
-      searchindex: '#{ENV}/searchindex'
+    <<: *build_overview_server_component
+    post_install_commands:
+      - /opt/overview/config-searchindex/scripts/start.sh
 
-
-  
-repositories:
-  main:
-    url: git@github.com:overview/overview-server.git
-    build_command: './sbt all/dist all/simple-dist'
-    clean_command: './sbt all/clean'
-    # unzip args: "-j" junk paths for flat output dir; "-d" destination directory; "-q" quiet
-    export_command: 'unzip -q -j dist/overview*.zip "*.jar" -d #{DESTINATION_PATH}'
-    copy:
-      web: ''
-      worker: ''
-  config:
-    url: git@github.com:overview/aws-overview-config.git
-    build_command: '/opt/overview/managed-code/config/repo/generate.sh'
-    clean_command: 'rm -rv generated/'
-    build_env:
-      OVERVIEW_SECRETS: /opt/overview/config/manage/secrets.yml
-      OVERVIEW_CONFIG: /opt/overview/config/manage/config.yml
-    export_command: 'cp -a generated/* #{DESTINATION_PATH}'
-    copy:
-      web: '#{ENV}/web'
-      worker: '#{ENV}/worker'
-      database: '#{ENV}/database'
+  config-web:
+    <<: *build_config_component
+  config-worker:
+    <<: *build_config_component
+  config-database:
+    <<: *build_config_component
+  config-searchindex:
+    <<: *build_config_component
