@@ -1,5 +1,7 @@
 require 'net/ssh'
 
+require 'machine_shell'
+
 class Machine
   attr_reader(:environment, :type, :ip_address)
 
@@ -32,8 +34,11 @@ class Machine
   end
 
   def shell(&block)
-    Net::SSH.start(ip_address, 'ubuntu') do |ssh|
-      yield(ssh)
-    end
+    return block.call(@shell) if @shell
+
+    ssh = Net::SSH.start(ip_address, 'ubuntu') # we'll disconnect on shutdown
+    @shell = MachineShell.new(ssh)
+
+    block.call(@shell)
   end
 end

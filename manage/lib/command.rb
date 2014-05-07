@@ -2,13 +2,28 @@ class Command
   def name
     raise NotImplementedError.new
   end
+  def self.name(name)
+    define_method(:name) do
+      name
+    end
+  end
 
   def arguments_schema
     raise NotImplementedError.new
   end
+  def self.arguments_schema(schema)
+    define_method(:arguments_schema) do
+      schema
+    end
+  end
 
   def description
     raise NotImplementedError.new
+  end
+  def self.description(description)
+    define_method(:description) do
+      description
+    end
   end
 
   def run(runner, *args)

@@ -1,3 +1,5 @@
+require_relative 'command'
+
 class ProjectCommand < Command
 
   def project_names

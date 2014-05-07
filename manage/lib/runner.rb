@@ -19,11 +19,11 @@ require_relative 'commands/start'
 require_relative 'commands/stop'
 
 class Runner
-  attr_reader(:state, :instances, :projects, :commands)
+  attr_reader(:state, :commands)
 
-  def initialize(state, projects)
+  def initialize(state, store)
     @state = state
-    @projects = projects
+    @store = store
 
     command_classes = [
       Commands::Status,
@@ -58,7 +58,23 @@ class Runner
   end
 
   def instances
-    state.instances
+    @state.instances
+  end
+
+  def components
+    @store.components
+  end
+
+  def components_with_source(source)
+    components.with_source(source)
+  end
+
+  def machine_types
+    @store.machine_types
+  end
+
+  def sources
+    @store.sources
   end
 
   def run(command_name, *args)

@@ -10,7 +10,8 @@ module Operations
   #
   #     source_artifact = ... a SourceArtifact ...
   #     component = ... a Component ...
-  #     prepare = Prepare.new(source_artifact, component)
+  #     environment = 'production'
+  #     prepare = Prepare.new(source_artifact, component, environment)
   #     component_artifact = prepare.run
   #     component_artifact.sha         # 'a1b2c3d4e5f6....'
   #     component_artifact.files       # Array of file paths

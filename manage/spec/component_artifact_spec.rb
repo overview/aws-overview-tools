@@ -7,6 +7,7 @@ RSpec.describe ComponentArtifact do
     subject { ComponentArtifact.new('component', 'abcdef123456', 'production') }
 
     it { expect(subject.path).to eq('/opt/overview/manage/component-artifacts/component/abcdef123456/production') }
+    it { expect(subject.install_path).to eq('/opt/overview/component') }
     it { expect(subject.files_path).to eq('/opt/overview/manage/component-artifacts/component/abcdef123456/production/files') }
     it { expect(subject.md5sum_path).to eq('/opt/overview/manage/component-artifacts/component/abcdef123456/production/md5sum.txt') }
     it { expect(subject.file_path('foo.txt')).to eq('/opt/overview/manage/component-artifacts/component/abcdef123456/production/files/foo.txt') }

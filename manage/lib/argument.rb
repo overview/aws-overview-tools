@@ -22,4 +22,16 @@ class Argument
   def parse(runner, string)
     raise NotImplementedError.new
   end
+
+  # DSL-style
+  def self.name(name)
+    define_method(:name) do
+      name
+    end
+  end
+  def self.description(description)
+    define_method(:description) do
+      description
+    end
+  end
 end

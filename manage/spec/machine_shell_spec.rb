@@ -27,6 +27,11 @@ RSpec.describe MachineShell do
     expect(subject.mkdir_p('/foo/bar')).to be(true)
   end
 
+  it 'should ln_sf successfully' do
+    expect(@ssh).to receive(:exec!).with('ln -sf /tmp/foo /tmp/bar > /dev/null 2>&1; echo $?').and_return("0\n")
+    expect(subject.ln_sf('/tmp/foo', '/tmp/bar')).to be(true)
+  end
+
   it 'should check is_component_artifact_valid?' do
     expect(@ssh).to receive(:exec!).with('(cd /foo/bar/files && md5sum -c ../md5sum.txt) > /dev/null 2>&1; echo $?').and_return("0\n")
     expect(subject.is_component_artifact_valid?('/foo/bar')).to be(true)

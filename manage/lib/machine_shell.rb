@@ -18,6 +18,14 @@ class MachineShell
     exec([ 'rm', '-rf', path ])
   end
 
+  # Links src to dest, such that dest is a symlink pointing at src.
+  #
+  # Returns true if the linking worked. Returns false for, say, permission
+  # errors.
+  def ln_sf(src, dest)
+    exec([ 'ln', '-sf', src, dest ])
+  end
+
   # Creates all directories in the given path.
   #
   # Returns true if the creation worked (even if the path already existed).

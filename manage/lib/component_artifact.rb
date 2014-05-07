@@ -16,6 +16,10 @@ class ComponentArtifact
     "#{root}/#{component}/#{sha}/#{environment}"
   end
 
+  def install_path
+    "/opt/overview/#{component}"
+  end
+
   def files_path
     "#{path}/files"
   end
