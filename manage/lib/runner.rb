@@ -10,6 +10,7 @@ require_relative 'commands/deploy_command'
 #require_relative 'commands/restart'
 #require_relative 'commands/start'
 #require_relative 'commands/stop'
+require_relative 'machine'
 
 class Runner
   attr_reader(:state, :commands)
@@ -49,7 +50,7 @@ class Runner
     @machines ||= @state.instances.map do |instance|
       type = @store.machine_types[instance.type]
       Machine.new(
-        environment: instance.environment, 
+        environment: instance.env,
         ip_address: instance.ip_address,
         type: instance.type,
         components: Set.new(type.components)
@@ -58,9 +59,9 @@ class Runner
   end
 
   def machines_with_spec(spec)
-    raise ArgumentError.new("You must specify some machines. Try 'production.web' or 'staging.worker.10.1.2.3'") if spec.empty?
+    raise ArgumentError.new("You must specify some machines. Try 'production/web' or 'staging/worker/10.1.2.3'") if spec.empty?
 
-    environment, type, ip_address = spec.split('.', 3)
+    environment, type, ip_address = spec.split('/', 3)
 
     machines
       .select{ |m| m.environment == environment }
@@ -84,6 +85,14 @@ class Runner
     @store.sources
   end
 
+  def environments
+    @environments ||= Set.new(
+      machines
+        .map{ |m| m.environment }
+        .uniq
+    )
+  end
+
   def run(command_name, *args)
     command = @commands[command_name]
     if !command
@@ -99,7 +108,7 @@ class Runner
       $stderr.puts command.usage
       exit(1)
     end
-    puts command.run(self, *arguments)
+    command.run(self, *arguments)
   end
 
   def parse_args_with_schema(args, schema)

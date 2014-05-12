@@ -8,7 +8,7 @@ module Arguments
     end
 
     def description
-      'specifies a particular instance (e.g., "production.web.10.1.2.3")'
+      'specifies a particular instance (e.g., "production/web/10.1.2.3")'
     end
 
     def parse(runner, string)

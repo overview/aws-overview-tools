@@ -12,6 +12,10 @@ class Machine
     @components = hash['components'] || hash[:components]
   end
 
+  def to_s
+    "#{environment}/#{type}/#{ip_address}"
+  end
+
   def shell(&block)
     return block.call(@shell) if @shell
 

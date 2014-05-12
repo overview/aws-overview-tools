@@ -3,8 +3,8 @@
 # A search looks like this:
 #
 # * "production": all instances in production
-# * "staging.web": all web instances in staging
-# * "production.worker.10.1.2.3": a specific instance
+# * "staging/web": all web instances in staging
+# * "production/worker/10.1.2.3": a specific instance
 #
 # The "env" part is mandatory, and you cannot specify an IP address without
 # specifying the others. (Rationale: we want to avoid typos and unexpected
@@ -18,7 +18,7 @@ class Searcher
     elsif string_or_list.respond_to?(:to_list)
       string_or_list = string_or_list.to_list
     elsif string_or_list.respond_to?(:upcase)
-      string_or_list = string_or_list.split('.', 3)
+      string_or_list = string_or_list.split('/', 3)
     end
 
     @env = string_or_list[0]

@@ -6,8 +6,8 @@ computer to deploy Overview.)
 
 # Recipes
 
-* To deploy new code: `overview-manage deploy main@_tag_`
-* To deploy new code to only one machine: `overview-manage deploy main@_tag_ production.web`
+* To deploy new code: `overview-manage deploy main@_tag_ production`
+* To deploy new code to only one machine: `overview-manage deploy main@_tag_ production/web/10.x.x.x`
 * To deploy new config: `overview-manage deploy config` (_@tag_ is optional: it defaults to `master`)
 
 Want more? Sorry, you'll have to read up on _concepts_....
@@ -22,7 +22,7 @@ Nouns:
 * An **environment** is one of **production** or **staging**. We test stuff on *staging*; our live site is on *production*.
 * A **component** is, conceptually, a service. Theoretically, it _should_ come from multiple *source artifacts*. Right now, it comes from just one. (That's awkward: if one *source artifact* contains config files and another contains jar files, then you need two components to run the service. We're working on it.)
 * A **machine** is an Amazon EC2 Instance. It runs in one *environment*, and it runs many *components*. We identify it by its private IP address, e.g., `10.x.x.x`.
-* A **machine type** is a recipe: it specifies how to build a *machine* and which *components* run on it. We identify it as, say, `production.web`.
+* A **machine type** is a recipe: it specifies how to build a *machine* and which *components* run on it. We identify it as, say, `production/web`.
 * A **component artifact** is a group of files on a *machine*, built from a *source artifact*. It can be run. (It includes a checksum for verifying itself.) For instance: jar files.
 
 Verbs:

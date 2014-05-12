@@ -8,7 +8,7 @@ module Arguments
   # we throw an ArgumentError.
   class Machines < Base
     name 'MACHINES'
-    description 'running machines: "production", "staging.web", or "production.web.10.1.2.3", for instance'
+    description 'running machines: "production", "staging/web", or "production/web/10.1.2.3", for instance'
 
     def parse(runner, string)
       if runner.machines_with_spec(string).empty?
