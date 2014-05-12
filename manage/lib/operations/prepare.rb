@@ -1,7 +1,7 @@
 require 'erb'
 require 'fileutils'
 
-require 'component_artifact'
+require_relative '../component_artifact'
 
 module Operations
   # Derives a ComponentArtifact from a SourceArtifact and Component

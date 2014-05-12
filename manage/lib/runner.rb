@@ -24,10 +24,10 @@ class Runner
       Commands::AddInstance,
       Commands::RemoveInstance,
       Commands::BuildCommand,
-      Commands::PrepareCommand
-      Commands::Publish,
-      Commands::Install,
-      Commands::Deploy
+      Commands::PrepareCommand,
+      Commands::PublishCommand,
+      Commands::InstallCommand,
+      Commands::DeployCommand
     ]
 
     # Turn into hash of { 'add-instance' => Commands::AddInstance.new }

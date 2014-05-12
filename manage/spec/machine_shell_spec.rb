@@ -11,29 +11,29 @@ RSpec.describe MachineShell do
   subject { MachineShell.new(@ssh) }
 
   it 'should rm_rf successfully' do
-    expect(@ssh).to receive(:exec!).with('rm -rf /foo/bar > /dev/null 2>&1; echo $?').and_return("0\n")
+    expect(subject).to receive(:exec_command).with('rm -rf /foo/bar').and_return(true)
     expect(subject.rm_rf('/foo/bar')).to be(true)
   end
 
   it 'should fail an rm_rf' do
     # We won't test _all_ the failures, since we know they're all implemented
     # the same way.
-    expect(@ssh).to receive(:exec!).with('rm -rf /foo/bar > /dev/null 2>&1; echo $?').and_return("1\n")
-    expect(subject.rm_rf('/foo/bar')).to be(false)
+    expect(subject).to receive(:exec_command).with('rm -rf /foo/bar').and_raise(Exception.new)
+    expect{ subject.rm_rf('/foo/bar') }.to raise_error(Exception)
   end
 
   it 'should mkdir_p successfully' do
-    expect(@ssh).to receive(:exec!).with('mkdir -p /foo/bar > /dev/null 2>&1; echo $?').and_return("0\n")
+    expect(subject).to receive(:exec_command).with('mkdir -p /foo/bar').and_return(true)
     expect(subject.mkdir_p('/foo/bar')).to be(true)
   end
 
   it 'should ln_sf successfully' do
-    expect(@ssh).to receive(:exec!).with('ln -sf /tmp/foo /tmp/bar > /dev/null 2>&1; echo $?').and_return("0\n")
+    expect(subject).to receive(:exec_command).with('ln -sf /tmp/foo /tmp/bar').and_return(true)
     expect(subject.ln_sf('/tmp/foo', '/tmp/bar')).to be(true)
   end
 
   it 'should check is_component_artifact_valid?' do
-    expect(@ssh).to receive(:exec!).with('(cd /foo/bar/files && md5sum -c ../md5sum.txt) > /dev/null 2>&1; echo $?').and_return("0\n")
+    expect(subject).to receive(:exec_command).with('(cd /foo/bar/files && md5sum -c ../md5sum.txt)').and_return(true)
     expect(subject.is_component_artifact_valid?('/foo/bar')).to be(true)
   end
 

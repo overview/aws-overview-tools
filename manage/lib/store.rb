@@ -1,6 +1,6 @@
-require 'stores/components'
-require 'stores/sources'
-require 'stores/machine_types'
+require_relative 'stores/components'
+require_relative 'stores/sources'
+require_relative 'stores/machine_types'
 
 class Store
   attr_reader(:components, :machine_types, :sources)

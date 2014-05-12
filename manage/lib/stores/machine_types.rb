@@ -1,6 +1,5 @@
-require 'machine_type'
-
-require 'stores/base'
+require_relative 'base'
+require_relative '../machine_type'
 
 module Stores
   class MachineTypes < Base

@@ -1,8 +1,8 @@
-require 'operations/build'
-require 'operations/prepare'
-require 'operations/publish'
-require 'operations/install'
-require 'operations/deploy'
+require_relative 'operations/build'
+require_relative 'operations/prepare'
+require_relative 'operations/publish'
+require_relative 'operations/install'
+require_relative 'operations/deploy'
 
 # Runs build/prepare/publish/install/deploy with string arguments.
 #

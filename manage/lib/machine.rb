@@ -1,6 +1,6 @@
 require 'net/ssh'
 
-require 'machine_shell'
+require_relative './machine_shell'
 
 class Machine
   attr_reader(:environment, :ip_address, :type, :components)

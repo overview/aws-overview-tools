@@ -1,5 +1,4 @@
 require 'shellwords'
-
 require 'net/scp'
 
 # An SSH connection to a Machine, with only a few hard-coded commands.
@@ -66,7 +65,46 @@ class MachineShell
       args
     end
 
-    result = ssh.exec!(cmd + ' > /dev/null 2>&1; echo $?')
-    success = (result.strip == '0')
+    exec_command(cmd)
+  end
+
+  def log(label, message)
+    puts "[#{label.upcase}] #{message}"
+  end
+
+  def exec_command(command)
+    log('run', command)
+
+    status = nil
+
+    @ssh.open_channel do |channel|
+      channel.exec(command) do |ch, success|
+        if success
+          ch.on_data do |ch2, data|
+            log('stdout', data)
+          end
+
+          ch.on_extended_data do |ch2, type, data|
+            log('stderr', data)
+          end
+
+          ch.on_request('exit-status') do |ch, data|
+            status = data.read_long
+          end
+        else
+          raise Exception.new("Command could not be executed")
+        end
+      end
+    end
+
+    @ssh.loop { status.nil? }
+
+    msg = "Command exited with status #{status}"
+    if status != 0
+      raise Exception.new(msg)
+    else
+      log('run', msg)
+      true
+    end
   end
 end

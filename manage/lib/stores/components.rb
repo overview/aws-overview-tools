@@ -1,6 +1,5 @@
-require 'component'
-
-require 'stores/base'
+require_relative 'base'
+require_relative '../component'
 
 module Stores
   class Components < Base
