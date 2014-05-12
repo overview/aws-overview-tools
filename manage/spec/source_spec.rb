@@ -53,7 +53,7 @@ RSpec.describe 'Source' do
     path = "#{parent_path}/#{@subject.name}.git"
     expect(MockFile).to receive(:exist?).with(path).and_return(false)
     expect(MockFileUtils).to receive(:mkdir_p).with(path).and_return([])
-    expect(MockGit::Base).to receive(:clone).with(@subject.url, @subject.name + '.git', bare: true, path: parent_path).and_return(repository: path)
+    expect(MockGit::Base).to receive(:clone).with(@subject.url, @subject.name + '.git', bare: true, path: parent_path).and_return(double(repository: path, config: {}))
     @subject.fetch
   end
 

@@ -7,6 +7,12 @@ require_relative 'log'
 class MachineShell
   attr_reader(:ssh) # a Net::SSH::Session
 
+  class CommandFailedException < Exception
+    def initialize(message)
+      super(message)
+    end
+  end
+
   def initialize(ssh)
     @ssh = ssh
   end
@@ -41,7 +47,9 @@ class MachineShell
   # is an error we don't expect. It _does_ test if any files are missing or
   # corrupt, which is far more likely (because of an aborted upload).
   def is_component_artifact_valid?(path)
-    exec("(cd #{Shellwords.escape(path)}/files && md5sum -c ../md5sum.txt)")
+    exec("(cd #{Shellwords.escape(path)}/files && md5sum --status -c ../md5sum.txt)")
+  rescue CommandFailedException
+    false
   end
 
   # Copies the directory rooted at local_path into a new directory,
@@ -59,8 +67,9 @@ class MachineShell
     true
   end
 
-  private
-
+  # Executes an arbitrary command on the remote server.
+  #
+  # Either pass an Array of Strings (preferred), or pass one big string.
   def exec(args)
     cmd = if args.kind_of?(Array)
       Shellwords.join(args)
@@ -71,6 +80,8 @@ class MachineShell
     exec_command(cmd)
   end
 
+  private
+
   def exec_command(command)
     $log.info(@ssh.host) { "Running #{command}" }
 
@@ -80,18 +91,18 @@ class MachineShell
       channel.exec(command) do |ch, success|
         if success
           ch.on_data do |ch2, data|
-            $log.info("#{@ssh.host}: #{data}")
+            $log.info(@ssh.host) { data }
           end
 
           ch.on_extended_data do |ch2, type, data|
-            $log.info("#{@ssh.host}:err: #{data}")
+            $log.warn(@ssh.host) { data }
           end
 
           ch.on_request('exit-status') do |ch, data|
             status = data.read_long
           end
         else
-          raise Exception.new("Command could not be executed")
+          raise RuntimeError.new("Command could not be executed")
         end
       end
     end
@@ -100,9 +111,9 @@ class MachineShell
 
     msg = "Command exited with status #{status}"
     if status != 0
-      raise Exception.new(msg)
+      raise CommandFailedException.new(msg)
     else
-      $log.info("#{@ssh.host}: #{msg}")
+      $log.info(@ssh.host) { msg }
       true
     end
   end

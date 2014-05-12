@@ -33,9 +33,14 @@ RSpec.describe MachineShell do
     expect(subject.ln_sf('/tmp/foo', '/tmp/bar')).to be(true)
   end
 
-  it 'should check is_component_artifact_valid?' do
-    expect(subject).to receive(:exec_command).with('(cd /foo/bar/files && md5sum -c ../md5sum.txt)').and_return(true)
+  it 'should check is_component_artifact_valid? => true' do
+    expect(subject).to receive(:exec_command).with('(cd /foo/bar/files && md5sum --status -c ../md5sum.txt)').and_return(true)
     expect(subject.is_component_artifact_valid?('/foo/bar')).to be(true)
+  end
+
+  it 'should check is_component_artifact_valid? => false' do
+    expect(subject).to receive(:exec_command).and_raise(MachineShell::CommandFailedException.new("Command returned non-zero status code"))
+    expect(subject.is_component_artifact_valid?('/foo/bar')).to be(false)
   end
 
   it 'should return true from upload_r' do

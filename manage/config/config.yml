@@ -9,7 +9,7 @@ sources:
   aws-overview-config:
     url: https://github.com/overview/aws-overview-config.git
     build_commands:
-      - OVERVIEW_CONFIG=/opt/overview/config/manage/config.yml OVERVIEW_SECRETS=/opt/overview/config/manage/secrets.yml ./generate.sh
+      - env OVERVIEW_CONFIG=/opt/overview/config/manage/config.yml OVERVIEW_SECRETS=/opt/overview/config/manage/secrets.yml ./generate.sh
       - "(cd generated && zip -r ../archive.zip *)"
 
 build_overview_server_component: &build_overview_server_component
@@ -22,30 +22,30 @@ build_config_component: &build_config_component
   prepare_commands:
     - "cp -a source/<%= environment %>/<%= component.name[7..-1] %>/* component"
   deploy_commands:
-    - "sudo cp -a <%= component.installed_path %>/root/* /"
-    - "<%= component.installed_path %>/scripts/start.sh"
+    - "sudo cp -a <%= component.install_path %>/root/* /"
+    - "sh <%= component.install_path %>/scripts/start.sh"
 
 components:
   frontend:
     <<: *build_overview_server_component
     deploy_commands:
-      - /opt/overview/config-web/scripts/start.sh
+      - sh /opt/overview/config-web/scripts/start.sh
   worker:
     <<: *build_overview_server_component
     deploy_commands:
-      - /opt/overview/config-worker/scripts/start.sh
+      - sh /opt/overview/config-worker/scripts/start.sh
   documentset-worker:
     <<: *build_overview_server_component
     deploy_commands:
-      - /opt/overview/config-worker/scripts/start.sh
+      - sh /opt/overview/config-worker/scripts/start.sh
   message-broker:
     <<: *build_overview_server_component
     deploy_commands:
-      - /opt/overview/config-worker/scripts/start.sh
+      - sh /opt/overview/config-worker/scripts/start.sh
   search-index:
     <<: *build_overview_server_component
     deploy_commands:
-      - /opt/overview/config-searchindex/scripts/start.sh
+      - sh /opt/overview/config-searchindex/scripts/start.sh
 
   config-web:
     <<: *build_config_component

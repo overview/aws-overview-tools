@@ -19,13 +19,13 @@ RSpec.describe Stores::Components do
         source: overview-server
         prepare_commands:
           - "(cd source/libs && xargs -I '{}' -a ../<%= component.name %>/classpath.txt cp '{}' ../../component)"
-        post_install_commands:
+        deploy_commands:
           - /opt/overview/config-web/scripts/start.sh
       worker:
         source: overview-server2
         prepare_commands:
           - "(cd source/libs && xargs -I '{}' -a ../<%= component.name %>/classpath.txt cp '{}' ../../component)"
-        post_install_commands:
+        deploy_commands:
           - /opt/overview/config-worker/scripts/start.sh
       })
     Stores::Components.from_yaml(yaml)

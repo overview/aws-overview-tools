@@ -76,7 +76,9 @@ class Source
     if !File.exist?(bare_git_repo_path)
       FileUtils.mkdir_p(bare_git_repo_path)
       $log.info('source') { "Cloning #{url} to #{bare_git_repo_path}..." }
-      Git::Base.clone(url, repo_name, bare: true, path: bare_git_repos_path)
+      repo = Git::Base.clone(url, repo_name, bare: true, path: bare_git_repos_path)
+      repo.config('remote.origin.fetch', '+refs/*:refs/*')
+      repo.config('remote.origin.mirror', true)
     end
   end
 
