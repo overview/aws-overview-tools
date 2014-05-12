@@ -49,10 +49,11 @@ RSpec.describe 'Source' do
     stub_const('File', MockFile)
     stub_const('FileUtils', MockFileUtils)
 
-    path = "/opt/overview/manage/sources/#{@subject.name}.git"
+    parent_path = "/opt/overview/manage/sources"
+    path = "#{parent_path}/#{@subject.name}.git"
     expect(MockFile).to receive(:exist?).with(path).and_return(false)
     expect(MockFileUtils).to receive(:mkdir_p).with(path).and_return([])
-    expect(MockGit::Base).to receive(:clone).with(@subject.url, @subject.name, bare: true, path: path).and_return(repository: path)
+    expect(MockGit::Base).to receive(:clone).with(@subject.url, @subject.name + '.git', bare: true, path: parent_path).and_return(repository: path)
     @subject.fetch
   end
 

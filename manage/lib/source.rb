@@ -1,5 +1,7 @@
 require 'git'
 
+require_relative 'log'
+
 # A wrapper around a bare Git repo
 class Source
   # An archive file of a source at a version
@@ -74,11 +76,20 @@ class Source
   def ensure_repo_exists
     if !File.exist?(bare_git_repo_path)
       FileUtils.mkdir_p(bare_git_repo_path)
-      Git::Base.clone(url, name, bare: true, path: bare_git_repo_path)
+      $log.info('source') { "Cloning #{url} to #{bare_git_repo_path}..." }
+      Git::Base.clone(url, repo_name, bare: true, path: bare_git_repos_path)
     end
   end
 
+  def bare_git_repos_path
+    "/opt/overview/manage/sources"
+  end
+
+  def repo_name
+    "#{name}.git"
+  end
+
   def bare_git_repo_path
-    "/opt/overview/manage/sources/#{name}.git"
+    "#{bare_git_repos_path}/#{repo_name}"
   end
 end
