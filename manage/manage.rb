@@ -2,7 +2,6 @@
 
 require 'bundler/setup'
 
-require_relative 'lib/manager_config'
 require_relative 'lib/project_collection'
 require_relative 'lib/runner'
 require_relative 'lib/state'
