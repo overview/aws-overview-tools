@@ -55,7 +55,7 @@ module Operations
       end
 
     ensure
-      FileUtils.remove_entry(archive.path)
+      FileUtils.remove_entry(archive.path, true)
     end
 
     def run
