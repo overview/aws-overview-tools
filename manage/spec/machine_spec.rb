@@ -3,11 +3,12 @@ require 'machine'
 require 'net/ssh'
 
 RSpec.describe Machine do
-  subject { Machine.new(environment: 'production', type: 'web', ip_address: '10.1.2.3') }
+  subject { Machine.new(environment: 'production', type: 'web', ip_address: '10.1.2.3', components: Set.new([ 'a', 'b' ])) }
 
   it { expect(subject.environment).to eq('production') }
   it { expect(subject.type).to eq('web') }
   it { expect(subject.ip_address).to eq('10.1.2.3') }
+  it { expect(subject.components).to eq(Set.new([ 'a', 'b' ])) }
 
   describe '.shell' do
     before(:each) do

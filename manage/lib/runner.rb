@@ -57,8 +57,32 @@ class Runner
     "Type \"#{$0} help COMMAND\" for help with a command"
   end
 
+  # Deprecated
   def instances
     @state.instances
+  end
+
+  def machines
+    @machines ||= @state.instances.map do |instance|
+      type = @store.machine_types[instance.type]
+      Machine.new(
+        environment: instance.environment, 
+        ip_address: instance.ip_address,
+        type: instance.type,
+        components: Set.new(type.components)
+      )
+    end
+  end
+
+  def machines_with_spec(spec)
+    raise ArgumentError.new("You must specify some machines. Try 'production.web' or 'staging.worker.10.1.2.3'") if spec.empty?
+
+    environment, type, ip_address = spec.split('.', 3)
+
+    machines
+      .select{ |m| m.environment == environment }
+      .select{ |m| type.nil? || m.type == type }
+      .select{ |m| ip_address.nil? || m.ip_address == ip_address }
   end
 
   def components

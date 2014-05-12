@@ -3,34 +3,13 @@ require 'net/ssh'
 require 'machine_shell'
 
 class Machine
-  attr_reader(:environment, :type, :ip_address)
+  attr_reader(:environment, :ip_address, :type, :components)
 
-  def initialize(hash_or_instance)
-    if hash_or_instance.is_a?(Hash)
-      @environment = hash_or_instance['environment'] || hash_or_instance[:environment]
-      @type = hash_or_instance['type'] || hash_or_instance[:type]
-      @ip_address = hash_or_instance['ip_address'] || hash_or_instance[:ip_address]
-    else
-      @environment = hash_or_instance.environment
-      @type = hash_or_instance.type
-      @ip_address = hash_or_instance.ip_address
-    end
-  end
-
-  def to_s
-    "#{environment}.#{type}.#{ip_address}"
-  end
-
-  def to_hash
-    {
-      'environment' => environment,
-      'type' => type,
-      'ip_address' => ip_address
-    }
-  end
-
-  def encode_with(coder)
-    coder.represent_map(nil, to_hash)
+  def initialize(hash)
+    @environment = hash['environment'] || hash[:environment]
+    @type = hash['type'] || hash[:type]
+    @ip_address = hash['ip_address'] || hash[:ip_address]
+    @components = hash['components'] || hash[:components]
   end
 
   def shell(&block)
