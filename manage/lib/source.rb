@@ -46,7 +46,7 @@ class Source
   end
 
   def fetch
-    $log.info('fetch') { "Fetching #{bare_git_repo_path}" }
+    $log.info('source') { "Fetching #{bare_git_repo_path}" }
     repo.fetch
   end
 
