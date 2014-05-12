@@ -1,5 +1,7 @@
 require 'digest'
 
+require_relative 'log'
+
 # A compiled source-code artifact.
 #
 # A SourceArtifact must persist from build to build. That means all metadata
@@ -20,6 +22,8 @@ class SourceArtifact
     @options = options
   end
 
+  def to_s; path end
+
   def path
     root = @options[:root] || "/opt/overview/manage/source-artifacts"
     "#{root}/#{source}/#{sha}"
@@ -34,6 +38,8 @@ class SourceArtifact
   end
 
   def valid?
+    $log.info('source-artifact') { "Validating #{to_s}" }
+
     from_file = md5sum_from_file
     from_zip = md5sum_from_zip
 

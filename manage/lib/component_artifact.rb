@@ -1,6 +1,8 @@
 require 'find'
 require 'set'
 
+require_relative 'log'
+
 class ComponentArtifact
   attr_reader(:component, :sha, :environment)
 
@@ -15,6 +17,8 @@ class ComponentArtifact
     root = @options[:root] || '/opt/overview/manage/component-artifacts'
     "#{root}/#{component}/#{sha}/#{environment}"
   end
+
+  def to_s; path end
 
   def install_path
     "/opt/overview/#{component}"
@@ -39,6 +43,7 @@ class ComponentArtifact
   end
 
   def valid?
+    $log.info('component-artifact') { "Validating #{to_s}" }
     File.exist?(md5sum_path) && all_files_in_md5sum? && all_md5sum_files_valid?
   end
 
