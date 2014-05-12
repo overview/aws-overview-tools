@@ -1,22 +1,15 @@
-require_relative 'commands/add_instance'
 require_relative 'commands/help'
-require_relative 'commands/remove_instance'
 require_relative 'commands/status'
-require_relative 'commands/fetch'
-require_relative 'commands/fetch_config'
-require_relative 'commands/checkout'
-require_relative 'commands/checkout_config'
-require_relative 'commands/build'
-require_relative 'commands/build_config'
-require_relative 'commands/clean'
-require_relative 'commands/clean_config'
-require_relative 'commands/copy'
-require_relative 'commands/copy_config'
-require_relative 'commands/deploy'
-require_relative 'commands/deploy_config'
-require_relative 'commands/restart'
-require_relative 'commands/start'
-require_relative 'commands/stop'
+require_relative 'commands/add_instance'
+require_relative 'commands/remove_instance'
+require_relative 'commands/build_command'
+require_relative 'commands/prepare_command'
+require_relative 'commands/publish_command'
+require_relative 'commands/install_command'
+require_relative 'commands/deploy_command'
+#require_relative 'commands/restart'
+#require_relative 'commands/start'
+#require_relative 'commands/stop'
 
 class Runner
   attr_reader(:state, :commands)
@@ -26,25 +19,15 @@ class Runner
     @store = store
 
     command_classes = [
+      Commands::Help,
       Commands::Status,
       Commands::AddInstance,
       Commands::RemoveInstance,
-      Commands::Help,
-      Commands::Build,
-      Commands::BuildConfig,
-      Commands::Clean,
-      Commands::CleanConfig,
-      Commands::Fetch,
-      Commands::FetchConfig,
-      Commands::Checkout,
-      Commands::CheckoutConfig,
-      Commands::Copy,
-      Commands::CopyConfig,
-      Commands::Deploy,
-      Commands::DeployConfig,
-      Commands::Restart,
-      Commands::Start,
-      Commands::Stop
+      Commands::BuildCommand,
+      Commands::PrepareCommand
+      Commands::Publish,
+      Commands::Install,
+      Commands::Deploy
     ]
 
     # Turn into hash of { 'add-instance' => Commands::AddInstance.new }

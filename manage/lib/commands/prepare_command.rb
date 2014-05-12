@@ -1,24 +1,16 @@
 require_relative 'base'
-require 'arguments/source_at_version'
+require_relative '../arguments/source_at_version'
+require_relative '../arguments/environment'
 
 module Commands
   class PrepareCommand < Base
     name 'prepare'
     description 'Bundles all components of the source at the specified version'
-    arguments_schema [ Arguments::SourceAtVersion.new ]
+    arguments_schema [ Arguments::SourceAtVersion.new, Arguments::Environment.new ]
 
-    def run(runner, source_at_version)
-      source = source_at_version.source
-      version = source_at_version.version
-
-      source_artifact = Operations::Build.new(source, version).run # may be very fast
-
-      components = runner.components_with_source(source.name)
-
-      components.each do |component|
-        prepare = Operations::Prepare.new(source_artifact, component)
-        prepare.run
-      end
+    def run(runner, source_at_version, environment)
+      pipeline = PipelineCommandRunner.new(runner)
+      pipeline.prepare(source_at_version.source, source_at_version.version, environment)
     end
   end
 end

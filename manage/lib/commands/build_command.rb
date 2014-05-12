@@ -1,5 +1,6 @@
 require_relative 'base'
-require 'arguments/source_at_version'
+require_relative '../arguments/source_at_version'
+require_relative '../pipeline_command_runner'
 
 module Commands
   class BuildCommand < Base
@@ -8,11 +9,8 @@ module Commands
     arguments_schema [ Arguments::SourceAtVersion.new ]
 
     def run(runner, source_at_version)
-      source = source_at_version.source
-      version = source_at_version.version
-
-      op = Operations::Build.new(source, version)
-      op.run
+      pipeline = PipelineCommandRunner.new(runner)
+      pipeline.build(source_at_version.source, source_at_version.version)
     end
   end
 end

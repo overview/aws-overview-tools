@@ -16,13 +16,13 @@ RSpec.describe Arguments::SourceAtVersion do
 
     it 'should parse a valid source+version' do
       ret = subject.parse(@runner, 'overview-server@abcdef123456')
-      expect(ret.source).to eq('foo')
+      expect(ret.source).to eq('overview-server')
       expect(ret.version).to eq('abcdef123456')
     end
 
     it 'should parse a source with no version as version origin/master' do
       ret = subject.parse(@runner, 'overview-server')
-      expect(ret.source).to eq('foo')
+      expect(ret.source).to eq('overview-server')
       expect(ret.version).to eq('origin/master')
     end
 

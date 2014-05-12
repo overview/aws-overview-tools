@@ -1,8 +1,8 @@
-require 'commands/build_command'
+require 'commands/install_command'
 
-RSpec.describe Commands::BuildCommand do
-  before(:each) { @runner = double() }
+RSpec.describe Commands::InstallCommand do
   before(:each) {
+    @runner = double()
     @pipelineCommandRunner = double()
     @pipelineCommandRunnerClass = double()
     stub_const('PipelineCommandRunner', @pipelineCommandRunnerClass)
@@ -10,7 +10,7 @@ RSpec.describe Commands::BuildCommand do
   }
 
   it 'should invoke PipelineCommandRunner.build' do
-    expect(@pipelineCommandRunner).to receive(:build).with('source', 'version')
-    subject.run(@runner, double(source: 'source', version: 'version'))
+    expect(@pipelineCommandRunner).to receive(:install).with('source', 'version', 'production')
+    subject.run(@runner, double(source: 'source', version: 'version'), 'production')
   end
 end
