@@ -19,7 +19,7 @@ module Commands
       state = runner.state
       state.instances << instance
       state.save
-      "Added #{instance.ip_address} to #{instance.env}.#{instance.type}"
+      puts "Added #{instance.ip_address} to #{instance.env}/#{instance.type}"
     end
   end
 end

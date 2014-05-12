@@ -18,7 +18,7 @@ module Commands
       state = runner.state
       instances = state.instances
       lines = instances.map { |instance| "\t#{instance.env}\t#{instance.type}\t#{instance.ip_address}" }.join("\n")
-      "Registered instances:\n#{lines}"
+      puts "Registered instances:\n#{lines}"
     end
   end
 end

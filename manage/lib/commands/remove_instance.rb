@@ -19,7 +19,7 @@ module Commands
       state = runner.state
       state.instances.remove(instance)
       state.save
-      "Removed #{instance.ip_address} from #{instance.env}.#{instance.type}"
+      puts "Removed #{instance.ip_address} from #{instance.env}/#{instance.type}"
     end
   end
 end
