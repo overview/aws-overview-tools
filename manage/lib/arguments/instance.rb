@@ -1,8 +1,8 @@
-require_relative '../argument'
+require_relative 'base'
 
 module Arguments
   # Returns a Searcher for a particular instance.
-  class Instance < Argument
+  class Instance < Base
     def name
       'INSTANCE'
     end

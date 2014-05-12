@@ -1,10 +1,10 @@
-require_relative '../argument'
+require_relative 'base'
 
 module Arguments
   # Parses out "staging" or "production".
   #
   # Input is of the form "staging" or "production".
-  class Environment < Argument
+  class Environment < Base
     name 'ENVIRONMENT'
     description 'an environment: either "production" or "staging"'
 

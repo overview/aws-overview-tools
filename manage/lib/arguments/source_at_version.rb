@@ -1,10 +1,10 @@
-require_relative '../argument'
+require_relative 'base'
 
 module Arguments
   # Parses out a source name and version string.
   #
   # Input is of the form "overview-server" or "overview-server@origin/master".
-  class SourceAtVersion < Argument
+  class SourceAtVersion < Base
     RetvalType = Struct.new(:source, :version)
     # A git ref regex is too complicated, and it doesn't really solve the
     # problem of predicting whether or not a ref is valid. See discussion

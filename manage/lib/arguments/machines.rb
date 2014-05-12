@@ -1,4 +1,4 @@
-require_relative '../argument'
+require_relative 'base'
 
 module Arguments
   # Parses a "machines specification" such as "production.web".
@@ -6,7 +6,7 @@ module Arguments
   # Input is of the form "production", "production.web" or
   # "production.web.10.1.2.3". If the input does not specify any machines,
   # we throw an ArgumentError.
-  class Machines < Argument
+  class Machines < Base
     name 'MACHINES'
     description 'running machines: "production", "staging.web", or "production.web.10.1.2.3", for instance'
 
