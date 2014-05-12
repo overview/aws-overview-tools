@@ -5,6 +5,6 @@
 # directory and execute the command you give.
 
 CONFIG_DIR=/opt/overview/config/manage
-DIR=$(dirname $(readlink -f $0))
+DIR="$(dirname "$(readlink -f "$0")")"
 
-(cd $DIR && ./manage.rb $@)
+(cd "$DIR" && ./manage.rb $@)
