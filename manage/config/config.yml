@@ -4,6 +4,7 @@ sources:
     url: https://github.com/overview/overview-server.git
     build_remotely: true
     build_commands:
+      - npm install || true
       - ./build archive.zip
 
   aws-overview-config:
