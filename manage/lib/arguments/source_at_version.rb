@@ -3,7 +3,7 @@ require_relative 'base'
 module Arguments
   # Parses out a source name and version string.
   #
-  # Input is of the form "overview-server" or "overview-server@origin/master".
+  # Input is of the form "overview-server" or "overview-server@master".
   class SourceAtVersion < Base
     RetvalType = Struct.new(:source, :version)
     # A git ref regex is too complicated, and it doesn't really solve the
@@ -16,7 +16,7 @@ module Arguments
     SourceAtVersionRegex = %r{^([-_a-zA-Z0-9]+)(?:@([-_/a-zA-Z0-9]+))?$}
 
     name 'SOURCE@VERSION'
-    description 'a source at a specific version (e.g., "overview-server@origin/master")'
+    description 'a source at a specific version (e.g., "overview-server@master")'
 
     def parse(runner, string)
       match = SourceAtVersionRegex.match(string)
@@ -27,7 +27,7 @@ module Arguments
 
       raise ArgumentError.new("'#{match[1]}' is not a valid source.") if !source
 
-      version = match[2] || 'origin/master'
+      version = match[2] || 'master'
 
       RetvalType.new(match[1], version)
     end

@@ -8,7 +8,7 @@ computer to deploy Overview.)
 
 * To deploy new code: `overview-manage deploy main@_tag_`
 * To deploy new code to only one machine: `overview-manage deploy main@_tag_ production.web`
-* To deploy new config: `overview-manage deploy config` (_@tag_ is optional: it defaults to `origin/master`)
+* To deploy new config: `overview-manage deploy config` (_@tag_ is optional: it defaults to `master`)
 
 Want more? Sorry, you'll have to read up on _concepts_....
 
@@ -17,7 +17,7 @@ Want more? Sorry, you'll have to read up on _concepts_....
 Nouns:
 
 * A **source** is a Git repository that contains code.
-* A **version** is a version of the *source*, identified by a "tree-ish". (For instance: `origin/master`, `tag1`, `aec6a94` or `3fbd31873e7b220dcbe535e06099a1856051b935`.)
+* A **version** is a version of the *source*, identified by a "tree-ish". (For instance: `master`, `tag1`, `aec6a94` or `3fbd31873e7b220dcbe535e06099a1856051b935`.)
 * A **source artifact** is a set of files representing a compiled *source* at a given *version*. (For instance: a zipfile.) It includes a checksum for verifying itself.
 * An **environment** is one of **production** or **staging**. We test stuff on *staging*; our live site is on *production*.
 * A **component** is, conceptually, a service. Theoretically, it _should_ come from multiple *source artifacts*. Right now, it comes from just one. (That's awkward: if one *source artifact* contains config files and another contains jar files, then you need two components to run the service. We're working on it.)

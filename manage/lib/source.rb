@@ -6,11 +6,11 @@ require_relative 'log'
 class Source
   # An archive file of a source at a version
   class SourceArchive
-    attr_reader(:sha, :file)
+    attr_reader(:sha, :path)
 
-    def initialize(sha, file)
+    def initialize(sha, path)
       @sha = sha
-      @file = file
+      @path = path
     end
   end
 
@@ -46,6 +46,7 @@ class Source
   end
 
   def fetch
+    $log.info('fetch') { "Fetching #{bare_git_repo_path}" }
     repo.fetch
   end
 
@@ -55,11 +56,9 @@ class Source
 
   # Returns a Tempfile which is a tarball git repo's files in the directory
   # "checkout/"
-  def archive(treeish)
-    object = repo.object(treeish)
-    sha = object.sha
-    file = object.archive(nil, format: 'tgz')
-    SourceArchive.new(object.sha, file)
+  def archive(sha)
+    path = repo.object(sha).archive(nil, format: 'tgz')
+    SourceArchive.new(sha, path)
   end
 
   private

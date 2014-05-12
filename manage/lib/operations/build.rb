@@ -1,13 +1,15 @@
 require 'digest'
 require 'fileutils'
 
+require_relative '../log'
+
 module Operations
   # Derives a SourceArtifact from a Source and version
   #
   # Usage:
   #
   #     source = ... a Source ...
-  #     treeish = 'origin/master' # or a sha1 or a tag
+  #     treeish = 'master' # or a sha1 or a tag
   #     build = Build.new(source, treeish)
   #     source_artifact = build.run
   #     source_artifact.sha         # 'a1b2c3d4e5f6....'
@@ -44,33 +46,38 @@ module Operations
       archive = @source.archive(sha)
 
       Dir.mktmpdir("overview-manage-build-#{@source.name}") do |path|
+        $log.info('build') { "Building in #{path}" }
         Dir.chdir(path) do
-          system('tar', 'xzf', archive.file.path)
+          system('tar', 'xzf', archive.path)
 
           yield
         end
       end
 
     ensure
-      archive.file.unlink
+      FileUtils.remove_entry(archive.path)
     end
 
     def run
       source_artifact = SourceArtifact.new(@source.name, sha)
 
       if !source_artifact.valid?
-        FileUtils.remove_entry(source_artifact.path)
+        $log.info('build') { "Creating empty destination directory #{source_artifact.path}" }
+        FileUtils.remove_entry(source_artifact.path, true)
         FileUtils.mkdir_p(source_artifact.path)
 
         in_build_directory do
           for command in commands
+            $log.info('build') { "Running #{command}" }
             %x(#{command})
           end
 
           # Write zip
+          $log.info('build') { "Copying archive.zip to #{source_artifact.zip_path}" }
           FileUtils.cp('archive.zip', source_artifact.zip_path)
 
           # Write md5sum
+          $log.info('build') { "Generating md5sum at #{source_artifact.md5sum_path}" }
           md5sum = Digest::MD5.file('archive.zip').hexdigest
           open(source_artifact.md5sum_path, 'w') do |f|
             f.write(md5sum)

@@ -1,6 +1,8 @@
 require 'shellwords'
 require 'net/scp'
 
+require_relative 'log'
+
 # An SSH connection to a Machine, with only a few hard-coded commands.
 class MachineShell
   attr_reader(:ssh) # a Net::SSH::Session
@@ -52,6 +54,7 @@ class MachineShell
   #
   # This method always returns true; a failure will cause a stack trace.
   def upload_r(local_path, remote_path)
+    $log.info(@ssh.host) { "Uploading #{local_path} to #{remote_path}" }
     ssh.scp.upload!(local_path, remote_path, recursive: true)
     true
   end
@@ -68,12 +71,8 @@ class MachineShell
     exec_command(cmd)
   end
 
-  def log(label, message)
-    puts "[#{label.upcase}] #{message}"
-  end
-
   def exec_command(command)
-    log('run', command)
+    $log.info(@ssh.host) { "Running #{command}" }
 
     status = nil
 
@@ -81,11 +80,11 @@ class MachineShell
       channel.exec(command) do |ch, success|
         if success
           ch.on_data do |ch2, data|
-            log('stdout', data)
+            $log.info("#{@ssh.host}: #{data}")
           end
 
           ch.on_extended_data do |ch2, type, data|
-            log('stderr', data)
+            $log.info("#{@ssh.host}:err: #{data}")
           end
 
           ch.on_request('exit-status') do |ch, data|
@@ -103,7 +102,7 @@ class MachineShell
     if status != 0
       raise Exception.new(msg)
     else
-      log('run', msg)
+      $log.info("#{@ssh.host}: #{msg}")
       true
     end
   end

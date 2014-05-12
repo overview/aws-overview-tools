@@ -4,7 +4,7 @@ require 'ostruct'
 
 RSpec.describe Arguments::SourceAtVersion do
   it { expect(subject.name).to eq('SOURCE@VERSION') }
-  it { expect(subject.description).to match(/overview-server@origin\/master/) }
+  it { expect(subject.description).to match(/overview-server@master/) }
 
   describe 'with a runner' do
     before(:each) do
@@ -20,10 +20,10 @@ RSpec.describe Arguments::SourceAtVersion do
       expect(ret.version).to eq('abcdef123456')
     end
 
-    it 'should parse a source with no version as version origin/master' do
+    it 'should parse a source with no version as version master' do
       ret = subject.parse(@runner, 'overview-server')
       expect(ret.source).to eq('overview-server')
-      expect(ret.version).to eq('origin/master')
+      expect(ret.version).to eq('master')
     end
 
     it 'should throw ArgumentError on invalid version' do

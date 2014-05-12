@@ -27,10 +27,10 @@ RSpec.describe Operations::Build do
   describe 'with local build' do
     before(:each) do
       class MockTarball
-        attr_accessor(:sha, :file)
-        def initialize(sha, file)
+        attr_accessor(:sha, :path)
+        def initialize(sha, path)
           @sha = sha
-          @file = file
+          @path = path
         end
       end
 
@@ -39,13 +39,13 @@ RSpec.describe Operations::Build do
         alias_method(:build_remotely?, :build_remotely)
 
         # A tarball with "foo/bar.txt" having contents "baz"
-        def archive(treeish)
+        def archive(sha)
           # file will be unlinked during garbage collection.
           # http://www.ruby-doc.org/stdlib-1.9.3/libdoc/tempfile/rdoc/Tempfile.html
           file = Tempfile.new('overview-manage-operations-build-spec')
           file.write(TarballContents)
           file.close()
-          MockTarball.new('abcdef', file)
+          MockTarball.new(sha, file.path)
         end
 
         def revparse(treeish)
@@ -58,7 +58,7 @@ RSpec.describe Operations::Build do
       @source.build_commands = [ "echo '#{Base64.strict_encode64(ZipContents)}' | base64 -d > archive.zip" ]
       @source.build_remotely = false
 
-      @subject = Operations::Build.new(@source, 'origin/master')
+      @subject = Operations::Build.new(@source, 'master')
     end
 
     before(:each) do
@@ -75,7 +75,7 @@ RSpec.describe Operations::Build do
 
         def path; 'REPLACEME'; end
         def zip_path; path + "/foo.zip"; end
-        def md5sum_path; path + "md5sum"; end
+        def md5sum_path; path + "/md5sum"; end
         def valid?; false; end
       end
 
@@ -93,7 +93,7 @@ RSpec.describe Operations::Build do
     end
 
     it 'should revparse the treeish' do
-      expect(@source).to receive(:revparse).with('origin/master').and_return('abcdef123456')
+      expect(@source).to receive(:revparse).with('master').and_return('abcdef123456')
       expect(@subject.sha).to eq('abcdef123456')
     end
 

@@ -1,3 +1,5 @@
+require_relative '../log'
+
 module Operations
   class Install
     def initialize(component_artifact, machine)
@@ -6,6 +8,7 @@ module Operations
     end
 
     def run
+      $log.info('install') { "Installing to #{@machine.to_s}" }
       @machine.shell do |shell|
         shell.ln_sf(@component_artifact.files_path, @component_artifact.install_path)
       end

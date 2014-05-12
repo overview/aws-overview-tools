@@ -4,6 +4,8 @@ require_relative 'operations/publish'
 require_relative 'operations/install'
 require_relative 'operations/deploy'
 
+require_relative 'source_artifact'
+
 # Runs build/prepare/publish/install/deploy with string arguments.
 #
 # overview-manage has a "pipeline" of commands which must be executed in order.

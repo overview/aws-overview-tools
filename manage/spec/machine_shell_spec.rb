@@ -6,6 +6,7 @@ require('net/scp')
 RSpec.describe MachineShell do
   before(:each) do
     @ssh = instance_double('Net::SSH::Connection::Session')
+    allow(@ssh).to receive(:host).and_return('10.1.1.1')
   end
 
   subject { MachineShell.new(@ssh) }

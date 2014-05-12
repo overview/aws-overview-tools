@@ -1,3 +1,5 @@
+require_relative '../log'
+
 module Operations
   class Publish
     attr_reader(:component_artifact, :machine)
@@ -8,6 +10,7 @@ module Operations
     end
 
     def run
+      $log.info('publish') { "Publishing #{@component_artifact.path} to #{@machine.to_s}" }
       machine.shell do |shell|
         if shell.is_component_artifact_valid?(@component_artifact.path)
           return true

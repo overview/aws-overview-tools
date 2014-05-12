@@ -2,6 +2,7 @@ require 'erb'
 require 'fileutils'
 
 require_relative '../component_artifact'
+require_relative '../log'
 
 module Operations
   # Derives a ComponentArtifact from a SourceArtifact and Component
@@ -55,6 +56,7 @@ module Operations
 
     def in_build_directory(&block)
       Dir.mktmpdir("overview-manage-prepare-#{@component.name}") do |path|
+        $log.info('prepare') { "Preparing in #{path}" }
         Dir.chdir(path) do
           Dir.mkdir('source')
           Dir.chdir('source') do
@@ -71,6 +73,7 @@ module Operations
       component_artifact = ComponentArtifact.new(@component.name, @source_artifact.sha, @environment)
 
       if !component_artifact.valid?
+        $log.info('prepare') { "Creating empty destination directory #{component_artifact.path}" }
         if File.exist?(component_artifact.path)
           FileUtils.remove_entry(component_artifact.path)
         end
@@ -86,6 +89,7 @@ module Operations
             end
           end
 
+          $log.info('prepare') { "Copying files and md5sum to #{component_artifact.path}" }
           Dir.chdir('component') do
             md5sums = %x(find . -type f | cut -b 3- | xargs md5sum -b)
             open(component_artifact.md5sum_path, 'w') { |f| f.write(md5sums) }

@@ -108,23 +108,19 @@ RSpec.describe 'Source' do
 
     it 'should find a sha' do
       expect(@repo).to receive(:revparse).and_return 'abcdef123456'
-      sha = @subject.revparse('origin/master')
+      sha = @subject.revparse('master')
       expect(sha).to eq('abcdef123456')
     end
 
-    it 'should give an archive a version' do
-      class MockObject
-      end
-      mock_object = MockObject.new
-      mock_file = Object.new
+    it 'should give an archive a sha' do
+      mock_object = double(sha: 'abcdef')
 
-      expect(@repo).to receive(:object).with('origin/master').and_return(mock_object)
-      allow(mock_object).to receive(:sha).and_return('abcdef')
-      expect(mock_object).to receive(:archive).with(nil, format: 'tgz').and_return(mock_file)
+      expect(@repo).to receive(:object).with('abcdef').and_return(mock_object)
+      expect(mock_object).to receive(:archive).with(nil, format: 'tgz').and_return('path')
 
-      archive = @subject.archive('origin/master')
+      archive = @subject.archive('abcdef')
       expect(archive.sha).to eq('abcdef')
-      expect(archive.file).to equal(mock_file)
+      expect(archive.path).to eq('path')
     end
   end
 end
