@@ -15,7 +15,7 @@ sources:
 build_overview_server_component: &build_overview_server_component
   source: overview-server
   prepare_commands:
-    - "(cd source/libs && xargs -I '{}' -a ../<%= component.name %>/classpath.txt cp '{}' ../../component)"
+    - "(cd source/archive/lib && xargs -I '{}' -a ../<%= component.name %>/classpath.txt cp '{}' ../../../component)"
 
 build_config_component: &build_config_component
   source: aws-overview-config
