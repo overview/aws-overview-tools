@@ -3,6 +3,7 @@ require 'digest'
 require 'shell'
 require 'tempfile'
 
+require 'source'
 require 'operations/build'
 
 RSpec.describe Operations::Build do
@@ -24,39 +25,25 @@ RSpec.describe Operations::Build do
     AGZvby50eHRVVAUAA2sHaFN1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAARQAAAAAA
     ''')
 
+  describe 'with a remote build' do
+  end
+
   describe 'with local build' do
     before(:each) do
-      class MockTarball
-        attr_accessor(:sha, :path)
-        def initialize(sha, path)
-          @sha = sha
-          @path = path
-        end
+      @source = instance_double('Source',
+        name: 'source-name',
+        build_commands: [ "echo '#{Base64.strict_encode64(ZipContents)}' | base64 -d > archive.zip" ],
+        build_remotely?: false,
+        revparse: 'abcdef'
+      )
+      allow(@source).to receive(:archive) do |sha|
+        # file will be unlinked during garbage collection.
+        # http://www.ruby-doc.org/stdlib-1.9.3/libdoc/tempfile/rdoc/Tempfile.html
+        file = Tempfile.new('overview-manage-operations-build-spec')
+        file.write(TarballContents)
+        file.close()
+        double(sha: sha, path: file.path)
       end
-
-      class MockSource
-        attr_accessor(:name, :build_commands, :build_remotely)
-        alias_method(:build_remotely?, :build_remotely)
-
-        # A tarball with "foo/bar.txt" having contents "baz"
-        def archive(sha)
-          # file will be unlinked during garbage collection.
-          # http://www.ruby-doc.org/stdlib-1.9.3/libdoc/tempfile/rdoc/Tempfile.html
-          file = Tempfile.new('overview-manage-operations-build-spec')
-          file.write(TarballContents)
-          file.close()
-          MockTarball.new(sha, file.path)
-        end
-
-        def revparse(treeish)
-          'abcdef'
-        end
-      end
-
-      @source = MockSource.new
-      @source.name = 'source-name'
-      @source.build_commands = [ "echo '#{Base64.strict_encode64(ZipContents)}' | base64 -d > archive.zip" ]
-      @source.build_remotely = false
 
       @subject = Operations::Build.new(@source, 'master')
     end
@@ -111,7 +98,7 @@ RSpec.describe Operations::Build do
     end
 
     it 'should extract the source to the build directory' do
-      expect(@source).to receive(:archive).with('abcdef').and_call_original
+      expect(@source).to receive(:archive).with('abcdef')
 
       @subject.in_build_directory do
         contents = open('foo/bar.txt') { |f| f.read() }
@@ -132,7 +119,7 @@ RSpec.describe Operations::Build do
     it 'should run build_commands' do
       begin
         file = Tempfile.new('overview-manage-operations-build-spec')
-        @source.build_commands += [ "echo 'foo' > #{file.path}" ]
+        @source.build_commands << "echo 'foo' > #{file.path}"
         @subject.run
 
         expect(file.read()).to eq("foo\n")
@@ -144,7 +131,7 @@ RSpec.describe Operations::Build do
     it 'should not build when the build is already valid' do
       begin
         file = Tempfile.new('overview-manage-operations-build-spec')
-        @source.build_commands += [ "echo 'foo' > #{file.path}" ]
+        @source.build_commands << "echo 'foo' > #{file.path}"
         expect_any_instance_of(MockSourceArtifact).to receive(:valid?).and_return(true)
         @subject.run
 
