@@ -6,7 +6,8 @@ require_relative '../log'
 module Operations
   # Derives a SourceArtifact from a Source and version
   #
-  # Usage:
+  # Usage
+  # -----
   #
   #     source = ... a Source ...
   #     treeish = 'master' # or a sha1 or a tag
@@ -28,10 +29,24 @@ module Operations
   #    `source_artifact.md5sum_path`
   # 6. Deletes the build directory
   # 7. Deletes the git archive
+  #
+  # Remote builds
+  # -------------
+  #
+  # If `source.build_remotely? == true`, then the `Build` operation will rely
+  # on `RemoteBuilder` to spin up an Amazon EC2 instance to perform the build.
+  # Details are in the `RemoteBuilder` class; we must initialize the `Build`
+  # with a couple of options, though:
+  #
+  # * `connect_to_ec2`: a block that returns an `AWS::EC2` object.
+  # * `remote_build_options`: a bunch of options.
   class Build
-    def initialize(source, treeish)
+    attr_reader(:source, :treeish)
+
+    def initialize(source, treeish, options = {})
       @source = source
       @treeish = treeish
+      @options = options
     end
 
     def commands
@@ -66,26 +81,51 @@ module Operations
         FileUtils.remove_entry(source_artifact.path, true)
         FileUtils.mkdir_p(source_artifact.path)
 
-        in_build_directory do
-          for command in commands
-            $log.info('build') { "Running #{command}" }
-            %x(#{command})
-          end
-
-          # Write zip
-          $log.info('build') { "Copying archive.zip to #{source_artifact.zip_path}" }
-          FileUtils.cp('archive.zip', source_artifact.zip_path)
-
-          # Write md5sum
-          $log.info('build') { "Generating md5sum at #{source_artifact.md5sum_path}" }
-          md5sum = Digest::MD5.file('archive.zip').hexdigest
-          open(source_artifact.md5sum_path, 'w') do |f|
-            f.write(md5sum)
-          end
+        if @source.build_remotely?
+          build_on_ec2_instance(source_artifact.zip_path, source_artifact.md5sum_path)
+        else
+          build_on_this_machine(source_artifact.zip_path, source_artifact.md5sum_path)
         end
       end
 
       source_artifact
+    end
+
+    private
+
+    def build_on_ec2_instance(zip_path, md5sum_path)
+      $log.info('build') { "Building on a new EC2 instance" }
+
+      ec2 = @options[:connect_to_ec2].call()
+
+      archive = @source.archive(sha)
+
+      remote_builder = RemoteBuilder.new(ec2, @options[:remote_build_config])
+      md5sum = remote_builder.build(archive.path, @source.build_commands, zip_path)
+      open(md5sum_path, 'w') { |f| f.write(md5sum) }
+    ensure
+      FileUtils.remove_entry(archive, true)
+    end
+
+    def build_on_this_machine(zip_path, md5sum_path)
+      $log.info('build') { "Building locally" }
+      in_build_directory do
+        for command in commands
+          $log.info('build') { "Running #{command}" }
+          %x(#{command})
+        end
+
+        # Write zip
+        $log.info('build') { "Copying archive.zip to #{zip_path}" }
+        FileUtils.cp('archive.zip', zip_path)
+
+        # Write md5sum
+        $log.info('build') { "Generating md5sum at #{md5sum_path}" }
+        md5sum = Digest::MD5.file('archive.zip').hexdigest
+        open(md5sum_path, 'w') do |f|
+          f.write(md5sum)
+        end
+      end
     end
   end
 end

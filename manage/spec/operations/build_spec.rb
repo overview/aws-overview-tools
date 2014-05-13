@@ -5,6 +5,7 @@ require 'tempfile'
 
 require 'source'
 require 'operations/build'
+require 'remote_builder'
 
 RSpec.describe Operations::Build do
   # A tarball containing "foo/bar.txt" with contents "baz"
@@ -25,70 +26,111 @@ RSpec.describe Operations::Build do
     AGZvby50eHRVVAUAA2sHaFN1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAARQAAAAAA
     ''')
 
+  before(:each) do
+    @source_archive_file = Tempfile.new('overview-manage-operations-build-spec')
+    @source_archive_file.write(TarballContents)
+    @source_archive_file.close()
+
+    @source = instance_double('Source',
+      name: 'source-name',
+      build_commands: [ "echo '#{Base64.strict_encode64(ZipContents)}' | base64 -d > archive.zip" ],
+      build_remotely?: false,
+      revparse: 'abcdef'
+    )
+    allow(@source).to receive(:archive) { |sha| double(sha: sha, path: @source_archive_file.path) }
+  end
+
+  after(:each) do
+    @source_archive_file.close!
+  end
+
+  before(:each) do
+    @build_dir = build_dir = Dir.mktmpdir
+
+    # Can't put stub_const in an around(:each)...
+    class MockSourceArtifact
+      attr_accessor(:source, :sha)
+      def initialize(source, sha, options = {})
+        @source = source
+        @sha = sha
+        @options = options
+      end
+
+      def path; 'REPLACEME'; end
+      def zip_path; path + "/foo.zip"; end
+      def md5sum_path; path + "/md5sum"; end
+      def valid?; false; end
+    end
+
+    allow_any_instance_of(MockSourceArtifact).to receive(:path).and_return(@build_dir)
+
+    stub_const('SourceArtifact', MockSourceArtifact)
+  end
+
   describe 'with a remote build' do
+    before(:each) do
+      @remote_builder = instance_double('RemoteBuilder')
+      allow(@remote_builder).to receive(:build)
+      allow(RemoteBuilder).to receive(:new).and_return(@remote_builder)
+    end
+
+    subject do
+      @ec2 = double()
+      connect_to_ec2 = lambda { @ec2 }
+      @remote_build_config = double()
+      allow(@source).to receive(:build_remotely?).and_return(true)
+      Operations::Build.new(@source, 'master', connect_to_ec2: connect_to_ec2, remote_build_config: @remote_build_config)
+    end
+
+    it 'should not create a build directory' do
+      expect(subject).not_to receive(:in_build_directory)
+      subject.run
+    end
+
+    it 'should run through a remote builder with EC2 set' do
+      expect(RemoteBuilder).to receive(:new) do |ec2, attrs|
+        expect(ec2).to equal(@ec2)
+        expect(attrs).to equal(@remote_build_config)
+        @remote_builder
+      end
+      expect(@remote_builder).to receive(:build).with(@source_archive_file.path, @source.build_commands, "#{@build_dir}/foo.zip")
+      subject.run
+    end
+
+    it 'should write the md5sum' do
+      expect(@remote_builder).to receive(:build).and_return('abcdef123456')
+      subject.run
+      expect(open("#{@build_dir}/md5sum") { |f| f.read() }).to eq('abcdef123456')
+    end
+
+    it 'should not build when the build is already valid' do
+      expect_any_instance_of(MockSourceArtifact).to receive(:valid?).and_return(true)
+      expect(@remote_builder).not_to receive(:build)
+      subject.run
+    end
   end
 
   describe 'with local build' do
-    before(:each) do
-      @source = instance_double('Source',
-        name: 'source-name',
-        build_commands: [ "echo '#{Base64.strict_encode64(ZipContents)}' | base64 -d > archive.zip" ],
-        build_remotely?: false,
-        revparse: 'abcdef'
-      )
-      allow(@source).to receive(:archive) do |sha|
-        # file will be unlinked during garbage collection.
-        # http://www.ruby-doc.org/stdlib-1.9.3/libdoc/tempfile/rdoc/Tempfile.html
-        file = Tempfile.new('overview-manage-operations-build-spec')
-        file.write(TarballContents)
-        file.close()
-        double(sha: sha, path: file.path)
-      end
-
-      @subject = Operations::Build.new(@source, 'master')
-    end
-
-    before(:each) do
-      @build_dir = build_dir = Dir.mktmpdir
-
-      # Can't put stub_const in an around(:each)...
-      class MockSourceArtifact
-        attr_accessor(:source, :sha)
-        def initialize(source, sha, options = {})
-          @source = source
-          @sha = sha
-          @options = options
-        end
-
-        def path; 'REPLACEME'; end
-        def zip_path; path + "/foo.zip"; end
-        def md5sum_path; path + "/md5sum"; end
-        def valid?; false; end
-      end
-
-      allow_any_instance_of(MockSourceArtifact).to receive(:path).and_return(@build_dir)
-
-      stub_const('SourceArtifact', MockSourceArtifact)
-    end
+    subject { Operations::Build.new(@source, 'master') }
 
     after(:each) do
       FileUtils.remove_entry(@build_dir)
     end
 
     it 'should pick up commands from the Source' do
-      expect(@subject.commands).to equal(@source.build_commands)
+      expect(subject.commands).to equal(@source.build_commands)
     end
 
     it 'should revparse the treeish' do
       expect(@source).to receive(:revparse).with('master').and_return('abcdef123456')
-      expect(@subject.sha).to eq('abcdef123456')
+      expect(subject.sha).to eq('abcdef123456')
     end
 
     it 'should build in a temporary directory' do
       dir1 = Dir.pwd
       dir2 = nil
 
-      @subject.in_build_directory do
+      subject.in_build_directory do
         dir2 = Dir.pwd
       end
 
@@ -98,9 +140,7 @@ RSpec.describe Operations::Build do
     end
 
     it 'should extract the source to the build directory' do
-      expect(@source).to receive(:archive).with('abcdef')
-
-      @subject.in_build_directory do
+      subject.in_build_directory do
         contents = open('foo/bar.txt') { |f| f.read() }
         expect(contents.strip).to eq('baz')
       end
@@ -109,7 +149,7 @@ RSpec.describe Operations::Build do
     it 'should delete the temporary directory after build' do
       path = nil
 
-      @subject.in_build_directory do
+      subject.in_build_directory do
         path = Dir.pwd
       end
 
@@ -120,7 +160,7 @@ RSpec.describe Operations::Build do
       begin
         file = Tempfile.new('overview-manage-operations-build-spec')
         @source.build_commands << "echo 'foo' > #{file.path}"
-        @subject.run
+        subject.run
 
         expect(file.read()).to eq("foo\n")
       ensure
@@ -133,7 +173,7 @@ RSpec.describe Operations::Build do
         file = Tempfile.new('overview-manage-operations-build-spec')
         @source.build_commands << "echo 'foo' > #{file.path}"
         expect_any_instance_of(MockSourceArtifact).to receive(:valid?).and_return(true)
-        @subject.run
+        subject.run
 
         expect(file.read()).to eq("")
       ensure
@@ -142,19 +182,17 @@ RSpec.describe Operations::Build do
     end
 
     describe 'with the SourceArtifact .run returns' do
-      subject { @subject.run }
-
-      it { expect(subject).to be_a(MockSourceArtifact) }
-      it { expect(subject.sha).to eq('abcdef') }
-      it { expect(subject.source).to eq('source-name') }
+      it { expect(subject.run).to be_a(MockSourceArtifact) }
+      it { expect(subject.run.sha).to eq('abcdef') }
+      it { expect(subject.run.source).to eq('source-name') }
 
       it 'should put archive.zip in source_artifact' do
-        zip = open(subject.zip_path, 'rb') { |f| f.read() }
+        zip = open(subject.run.zip_path, 'rb') { |f| f.read() }
         expect(zip).to eq(ZipContents)
       end
 
       it 'should add archive.md5sum in source_artifact' do
-        md5sum = open(subject.md5sum_path, 'rb') { |f| f.read() }
+        md5sum = open(subject.run.md5sum_path, 'rb') { |f| f.read() }
         expect(md5sum).to eq(Digest::MD5.new.hexdigest(ZipContents))
       end
     end

@@ -11,13 +11,17 @@ require_relative 'commands/deploy_command'
 #require_relative 'commands/start'
 #require_relative 'commands/stop'
 require_relative 'machine'
+require_relative 'store'
+
+require 'aws/ec2'
 
 class Runner
   attr_reader(:state, :commands)
 
-  def initialize(state, store)
+  def initialize(state, store, config)
     @state = state
     @store = store
+    @config = config
 
     command_classes = [
       Commands::Help,
@@ -91,6 +95,24 @@ class Runner
         .map{ |m| m.environment }
         .uniq
     )
+  end
+
+  def connect_to_ec2
+    access_key_id = ENV['AWS_ACCESS_KEY_ID']
+    secret_access_key = ENV['AWS_SECRET_ACCESS_KEY']
+
+    if !access_key_id || !secret_access_key
+      raise RuntimeError.new('This command needs you to spin up an EC2 instance, but you are missing AWS credentials. Please try again, setting the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables. See https://github.com/overview/overview-server/wiki/Deploying-from-scratch-to-amazon#amazon-web-services-aws-authentication')
+    end
+
+    AWS::EC2.new(
+      access_key_id: access_key_id,
+      secret_access_key: secret_access_key
+    )
+  end
+
+  def remote_build_config
+    @config['remote_build']
   end
 
   def run(command_name, *args)

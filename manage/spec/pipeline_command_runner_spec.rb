@@ -1,13 +1,11 @@
 require 'pipeline_command_runner'
 
+require 'operations/build'
 require 'ostruct'
 
 RSpec.describe PipelineCommandRunner do
   describe 'build' do
     before(:each) do
-      @buildOperationType = Struct.new(:source, :treeish)
-      stub_const('Operations::Build', @buildOperationType)
-
       @sourceArtifactType = Struct.new(:source, :sha)
       stub_const('SourceArtifact', @sourceArtifactType)
       allow_any_instance_of(@sourceArtifactType).to receive(:valid?).and_return(false)
@@ -16,33 +14,46 @@ RSpec.describe PipelineCommandRunner do
       allow(@source).to receive(:fetch)
       allow(@source).to receive(:revparse).with('version').and_return('version')
 
-      @runner = OpenStruct.new
-      @runner.sources = { 'source' => @source }
+      @buildOperationType = class_double('Operations::Build')
+      stub_const('Operations::Build', @buildOperationType)
+      @build_operation = instance_double('Operations::Build', source: @source, treeish: 'version')
+      allow(@buildOperationType).to receive(:new).and_return(@build_operation)
+      allow(@build_operation).to receive(:run).and_return(@source)
+
+      @runner = double(
+        sources: { 'source' => @source },
+        connect_to_ec2: lambda { nil },
+        remote_build_config: {}
+      )
     end
 
     subject { PipelineCommandRunner.new(@runner) }
 
     it 'should run and return a SourceArtifact' do
-      expect(@buildOperationType).to receive(:new).with(@source, 'version').and_call_original
-      expect_any_instance_of(@buildOperationType).to receive(:run).and_return(@source)
+      expect(@buildOperationType).to receive(:new) do |source, version, options|
+        expect(source).to equal(@source)
+        expect(version).to eq(version)
+        expect(options[:connect_to_ec2]).not_to be_nil
+        expect(options[:remote_build_config]).not_to be_nil
+        @build_operation
+      end
+      expect(@build_operation).to receive(:run).and_return(@source)
       expect(subject.build('source', 'version')).to eq(@source)
     end
 
-    it 'should raise an error if the source is not found' do
-      expect{ subject.build('invalid-source', 'version')}.to raise_error(RuntimeError)
-    end
-
     it 'should raise an error if the Build operation does' do
-      expect(@buildOperationType).to receive(:new).with(@source, 'version').and_call_original
-      expect_any_instance_of(@buildOperationType).to receive(:run).and_raise(ArgumentError.new('something went wrong'))
+      expect(@buildOperationType).to receive(:new).and_return(@build_operation)
+      expect(@build_operation).to receive(:run).and_raise(ArgumentError.new('something went wrong'))
       expect{ subject.build('source', 'version') }.to raise_error(ArgumentError)
     end
 
     it 'should call fetch and revparse and use revparsed version in BuildOperation' do
-      expect(@buildOperationType).to receive(:new).with(@source, 'abcdef123456').and_call_original
-      allow_any_instance_of(@buildOperationType).to receive(:run).and_return(@source)
       expect(@source).to receive(:fetch)
       expect(@source).to receive(:revparse).with('version').and_return('abcdef123456')
+      expect(@buildOperationType).to receive(:new) do |source, version|
+        expect(version).to eq('abcdef123456')
+        @build_operation
+      end
       subject.build('source', 'version')
     end
 

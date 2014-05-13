@@ -78,3 +78,11 @@ machine_types:
   database:
     components:
       - config-database
+
+remote_build:
+  availability_zone: us-east-1a
+  security_group: build
+  instance_type: c3.large
+  ami_id: ami-34b5535c
+  cache_volume_id: vol-998c9fdb
+  keypair_name: manage

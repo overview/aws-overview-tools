@@ -11,7 +11,7 @@ config = YAML.load_file('config/config.yml')
 
 store = Store.from_yaml(config)
 state = State.new('state.yml')
-runner = Runner.new(state, store)
+runner = Runner.new(state, store, config)
 
 if ARGV.length > 0
   runner.run(*ARGV)

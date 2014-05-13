@@ -35,6 +35,7 @@ RSpec.describe RemoteBuilder do
       instance_type: 'c3.large',
       ami_id: 'ami-34b5535c',
       cache_volume_id: 'vol-998c9fdb',
+      keypair_name: 'manage',
       pause_duration: 0
     )
     allow(ret).to receive(:can_connect_on_port_22?).and_return(true)
@@ -47,6 +48,7 @@ RSpec.describe RemoteBuilder do
   it('delete this arg https://github.com/rspec/rspec-mocks/issues/619'){ expect(subject.instance_type).to eq('c3.large') }
   it('delete this arg https://github.com/rspec/rspec-mocks/issues/619'){ expect(subject.ami_id).to eq('ami-34b5535c') }
   it('delete this arg https://github.com/rspec/rspec-mocks/issues/619'){ expect(subject.cache_volume_id).to eq('vol-998c9fdb') }
+  it('delete this arg https://github.com/rspec/rspec-mocks/issues/619'){ expect(subject.keypair_name).to eq('manage') }
 
   describe 'with_instance' do
     it 'should spin up an EC2 instance on start' do
@@ -57,6 +59,7 @@ RSpec.describe RemoteBuilder do
         availability_zone: 'us-east-1a',
         instance_type: 'c3.large',
         instance_initiated_shutdown_behavior: 'terminate',
+        key_name: 'manage',
         block_device_mappings: [{
           virtual_name: 'vol-998c9fdb',
           device_name: '/dev/sdf'

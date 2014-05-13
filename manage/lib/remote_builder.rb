@@ -7,6 +7,7 @@ class RemoteBuilder
     :cache_volume_id,
     :ec2,
     :instance_type,
+    :keypair_name,
     :security_group
   )
 
@@ -17,6 +18,7 @@ class RemoteBuilder
     @instance_type = hash[:instance_type] || hash['instance_type']
     @ami_id = hash[:ami_id] || hash['ami_id']
     @cache_volume_id = hash[:cache_volume_id] || hash['cache_volume_id']
+    @keypair_name = hash[:keypair_name] || hash['keypair_name']
     @pause_duration = hash[:pause_duration] || hash['pause_duration'] || 1
   end
 
@@ -27,6 +29,7 @@ class RemoteBuilder
       security_groups: security_group,
       instance_type: instance_type,
       instance_initiated_shutdown_behavior: 'terminate',
+      key_name: keypair_name,
       block_device_mappings: [{
         virtual_name: cache_volume_id,
         device_name: '/dev/sdf'

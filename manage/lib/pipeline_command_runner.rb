@@ -46,8 +46,6 @@ class PipelineCommandRunner
   def build(source_name, version)
     source = @runner.sources[source_name]
 
-    raise RuntimeError.new("Source '#{source_name}' does not exist. This should have been caught before now.") if !source
-
     source.fetch
     sha = source.revparse(version)
 
@@ -55,7 +53,12 @@ class PipelineCommandRunner
     if try_artifact.valid?
       try_artifact
     else
-      Operations::Build.new(source, sha).run
+      Operations::Build.new(
+        source,
+        sha,
+        connect_to_ec2: @runner.method(:connect_to_ec2),
+        remote_build_config: @runner.remote_build_config
+      ).run
     end
   end
 
