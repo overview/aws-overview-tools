@@ -52,19 +52,53 @@ class MachineShell
     false
   end
 
-  # Copies the directory rooted at local_path into a new directory,
-  # remote_path, on the remote machine.
+  # Copies the file or directory rooted at local_path into a new file or
+  # directory, remote_path, on the remote machine.
   #
   # For instance: `upload_r('/tmp/foo', '/usr/local/foo')` will behave like
   # `scp -r /tmp/foo/* user@host:/usr/local/foo`.
   #
-  # The remote_path must exist; it should probably be empty, too.
+  # If you are copying a directory, the remote_path must exist; it should
+  # probably be empty, too.
   #
   # This method always returns true; a failure will cause a stack trace.
   def upload_r(local_path, remote_path)
     $log.info(@ssh.host) { "Uploading #{local_path} to #{remote_path}" }
     ssh.scp.upload!(local_path, remote_path, recursive: true)
     true
+  end
+
+  # Copies the file or directory rooted at remote_path into a new file or
+  # directory, local_path, on the local machine.
+  #
+  # For instance: `download_r('/usr/local/foo', '/tmp/foo')` will behave like
+  # `scp -r user@host:/usr/local/foo /tmp/foo`.
+  #
+  # This method always returns true; a failure will cause a stack trace.
+  def download_r(remote_path, local_path)
+    $log.info(@ssh.host) { "Downloading #{remote_path} to #{local_path}" }
+    ssh.scp.download!(remote_path, local_path, recursive: true)
+    true
+  end
+
+  # Runs md5sum on the host and returns the MD5 sum.
+  def md5sum(path)
+    command = "md5sum -b #{Shellwords.escape(path)}"
+    $log.info(@ssh.host) { command }
+    ret = ssh.exec!(command)
+
+    md5 = ret
+      .downcase
+      .lines
+      .grep(/^[0-9a-z]{32}/)
+      .map{ |line| line[0...32] }
+      .first
+
+    if md5
+      md5
+    else
+      raise CommandFailedException.new(ret.strip)
+    end
   end
 
   # Executes an arbitrary command on the remote server.
