@@ -45,12 +45,12 @@ puts "Instance started. Private IP address: #{instance.private_ip_address}"
 
 partial_type = type.split('_').first
 production_or_staging = type.split('_').last == 'staging' && 'staging' || 'production'
-specifier = "#{production_or_staging}.#{partial_type}.#{instance.private_ip_address}"
+specifier = "#{production_or_staging}/#{partial_type}/#{instance.private_ip_address}"
 
 puts ""
 puts "Your next steps:"
 puts ""
 puts "1. overview-manage add-instance #{specifier}"
 puts "2. overview-manage ssh #{production_or_staging} #{partial_type} to accept its identity"
-puts "3. overview-manage deploy-config #{specifier} [CONFIG_VERSION]"
-puts "4. overview-manage deploy #{specifier} [OVERVIEW_VERSION]"
+puts "3. overview-manage deploy aws-overview-config@[CONFIG_VERSION] #{specifier}"
+puts "4. overview-manage deploy overview-server@[OVERVIEW_VERSION] #{specifier}"
