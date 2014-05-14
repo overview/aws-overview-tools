@@ -29,8 +29,8 @@ class MachineShell
   #
   # Returns true if the linking worked. Returns false for, say, permission
   # errors.
-  def ln_sf(src, dest)
-    exec([ 'ln', '-sf', src, dest ])
+  def ln_sfT(src, dest)
+    exec([ 'ln', '-sfT', src, dest ])
   end
 
   # Creates all directories in the given path.
@@ -52,14 +52,13 @@ class MachineShell
     false
   end
 
-  # Copies the file or directory rooted at local_path into a new file or
-  # directory, remote_path, on the remote machine.
+  # Copies the directory rooted at local_path into a new directory,
+  # remote_path, on the remote machine.
   #
   # For instance: `upload_r('/tmp/foo', '/usr/local/foo')` will behave like
   # `scp -r /tmp/foo/* user@host:/usr/local/foo`.
   #
-  # If you are copying a directory, the remote_path must exist; it should
-  # probably be empty, too.
+  # The remote_path must exist; it should probably be empty, too.
   #
   # This method always returns true; a failure will cause a stack trace.
   def upload_r(local_path, remote_path)
@@ -71,13 +70,13 @@ class MachineShell
   # Copies the file or directory rooted at remote_path into a new file or
   # directory, local_path, on the local machine.
   #
-  # For instance: `download_r('/usr/local/foo', '/tmp/foo')` will behave like
-  # `scp -r user@host:/usr/local/foo /tmp/foo`.
+  # For instance: `download('/usr/local/foo.txt', '/tmp/foo.txt')` will behave
+  # like `scp -r user@host:/usr/local/foo.txt /tmp/foo.txt`.
   #
   # This method always returns true; a failure will cause a stack trace.
-  def download_r(remote_path, local_path)
+  def download(remote_path, local_path)
     $log.info(@ssh.host) { "Downloading #{remote_path} to #{local_path}" }
-    ssh.scp.download!(remote_path, local_path, recursive: true)
+    ssh.scp.download!(remote_path, local_path)
     true
   end
 
@@ -125,11 +124,15 @@ class MachineShell
       channel.exec(command) do |ch, success|
         if success
           ch.on_data do |ch2, data|
-            $log.info(@ssh.host) { data }
+            data.lines.each do |line|
+              $log.info(@ssh.host) { line.chomp }
+            end
           end
 
           ch.on_extended_data do |ch2, type, data|
-            $log.warn(@ssh.host) { data }
+            data.lines.each do |line|
+              $log.warn(@ssh.host) { line.chomp }
+            end
           end
 
           ch.on_request('exit-status') do |ch, data|

@@ -4,12 +4,13 @@ sources:
     url: https://github.com/overview/overview-server.git
     build_remotely: true
     build_commands:
-      - npm install || true
+      - npm install --cache-min 6048000
       - ./build archive.zip
 
   aws-overview-config:
     url: https://github.com/overview/aws-overview-config.git
     build_commands:
+      - bundle install --deployment
       - env OVERVIEW_CONFIG=/opt/overview/config/manage/config.yml OVERVIEW_SECRETS=/opt/overview/config/manage/secrets.yml ./generate.sh
       - "(cd generated && zip -r ../archive.zip *)"
 
@@ -70,7 +71,7 @@ machine_types:
       - documentset-worker
       - message-broker
 
-  search-index:
+  searchindex:
     components:
       - search-index
       - config-searchindex
@@ -83,6 +84,6 @@ remote_build:
   availability_zone: us-east-1a
   security_group: build
   instance_type: c3.large
-  ami_id: ami-34b5535c
+  ami_id: ami-9642aefe
   cache_volume_id: vol-998c9fdb
   keypair_name: manage

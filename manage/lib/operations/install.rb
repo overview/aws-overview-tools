@@ -10,7 +10,7 @@ module Operations
     def run
       $log.info('install') { "Installing to #{@machine.to_s}" }
       @machine.shell do |shell|
-        shell.ln_sf(@component_artifact.files_path, @component_artifact.install_path)
+        shell.ln_sfT(@component_artifact.files_path, @component_artifact.install_path)
       end
     end
   end

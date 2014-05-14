@@ -2,6 +2,7 @@ require 'digest'
 require 'fileutils'
 
 require_relative '../log'
+require_relative '../remote_builder'
 
 module Operations
   # Derives a SourceArtifact from a Source and version
