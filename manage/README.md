@@ -4,13 +4,31 @@ This program runs on its own `m1.micro` instance on Amazon Web Services.
 (That means you don't need to install anything other than an ssh client on your
 computer to deploy Overview.)
 
-# Recipes
+# Quick start: Recipes
 
-* To deploy new code: `overview-manage deploy main@_tag_ production`
-* To deploy new code to only one machine: `overview-manage deploy main@_tag_ production/web/10.x.x.x`
-* To deploy new config: `overview-manage deploy config` (_@tag_ is optional: it defaults to `master`)
+* To deploy new code: `overview-manage deploy overview-server@_tag_ production`
+* To deploy new code to only one machine: `overview-manage deploy overview-server@_tag_ production/web/10.x.x.x`
+* To deploy new config: `overview-manage deploy aws-overview-config` (_@tag_ is optional: it defaults to `master`)
 
-Want more? Sorry, you'll have to read up on _concepts_....
+These all restart the running code on the servers. The restarts all happen within the same 30s, no matter how long the build takes. If the build fails, nothing happens.
+
+# Usage
+
+Commands look like this: `overview-manage COMMAND ARG1 ARG2 ...`
+
+See "Concepts" below to understand what these commands do. This is a mere cheat-sheet.
+
+| Command | Summary | Example | Duration |
+| ------- | ------- | ------- | -------- |
+| `build` | Compiles source code | `overview-manage build overview-server@deploy-2014-05-14.01` | 10min for `overview-server` |
+| `prepare` | Bundles built files for the given environment | `overview-manage prepare overview-server@deploy-2014-05-14.01 staging` | 30s: 5s per component of `overview-server` |
+| `publish` | Put bundles on servers | `overview-manage publish overview-server@deploy-2014-05-14.01 staging/web` | 30s: 5s per `overview-server` component per server |
+| `install` | Symlinks bundles to their final locations | `overview-manage install overview-server@deploy-2014-05-14.01 staging/web` | 1s |
+| `deploy` | Runs commands to restart components | `overview-manage deploy overview-server@deploy-2014-05-14.01 staging` | 5s per component of `overview-server` (this is how long the scripts take) |
+
+Each of these commands runs the commands before it; if they've already been done, a quick verification will occur instead.
+
+Want to deploy at a specific time? Run `publish` ahead of time, then `deploy` when you're ready.
 
 # Concepts
 
