@@ -13,7 +13,7 @@ module Arguments
     # ... and then ignore it.
     #
     # Let's just use [-_/a-zA-Z0-9], which is all we use
-    SourceAtVersionRegex = %r{^([-_a-zA-Z0-9]+)(?:@([-_/a-zA-Z0-9]+))?$}
+    SourceAtVersionRegex = %r{^([-_a-zA-Z0-9\.]+)(?:@([-_/a-zA-Z0-9\.]+))?$}
 
     name 'SOURCE@VERSION'
     description 'a source at a specific version (e.g., "overview-server@master")'
