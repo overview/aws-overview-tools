@@ -28,9 +28,9 @@ RSpec.describe MachineShell do
     expect(subject.mkdir_p('/foo/bar')).to be(true)
   end
 
-  it 'should ln_sf successfully' do
-    expect(subject).to receive(:exec_command).with('ln -sf /tmp/foo /tmp/bar').and_return(true)
-    expect(subject.ln_sf('/tmp/foo', '/tmp/bar')).to be(true)
+  it 'should ln_sfT successfully' do
+    expect(subject).to receive(:exec_command).with('ln -sfT /tmp/foo /tmp/bar').and_return(true)
+    expect(subject.ln_sfT('/tmp/foo', '/tmp/bar')).to be(true)
   end
 
   it 'should md5sum successfully' do
@@ -60,10 +60,10 @@ RSpec.describe MachineShell do
     expect(subject.upload_r('/foo/bar', '/foo/baz')).to be(true)
   end
 
-  it 'should return true from download_r' do
+  it 'should return true from download' do
     scp = instance_double('Net::SCP')
     expect(@ssh).to receive(:scp).and_return(scp)
-    expect(scp).to receive(:download!).with('/foo/bar', '/foo/baz', recursive: true).and_return('undefined')
-    expect(subject.download_r('/foo/bar', '/foo/baz')).to be(true)
+    expect(scp).to receive(:download!).with('/foo/bar', '/foo/baz').and_return('undefined')
+    expect(subject.download('/foo/bar', '/foo/baz')).to be(true)
   end
 end

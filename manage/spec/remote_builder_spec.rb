@@ -9,8 +9,15 @@ require 'net/ssh'
 RSpec.describe RemoteBuilder do
   before(:each) do
     @ec2_instances = instance_double('AWS::EC2::InstanceCollection')
+    @ec2_volumes = instance_double('AWS::EC2::VolumeCollection')
     @ec2 = instance_double('AWS::EC2')
+    @volume = instance_double('AWS::EC2::Volume')
+    @attachment = instance_double('AWS::EC2::Attachment')
     allow(@ec2).to receive(:instances).and_return(@ec2_instances)
+    allow(@ec2).to receive(:volumes).and_return(@ec2_volumes)
+    allow(@ec2_volumes).to receive(:[]).and_return(@volume)
+    allow(@volume).to receive(:attach_to).and_return(@attachment)
+    allow(@attachment).to receive(:status).and_return(:attached)
   end
 
   before(:each) do
@@ -18,6 +25,7 @@ RSpec.describe RemoteBuilder do
     @machineShellClass = class_double('MachineShell')
     stub_const('MachineShell', @machineShellClass)
     allow(@machineShellClass).to receive(:new).and_return(@machine_shell)
+    allow(@machine_shell).to receive(:exec).and_return(true)
   end
 
   before(:each) do
@@ -52,7 +60,7 @@ RSpec.describe RemoteBuilder do
 
   describe 'with_instance' do
     it 'should spin up an EC2 instance on start' do
-      instance = double(terminate: {}, private_ip_address: '10.1.2.3')
+      instance = double(terminate: {}, status: :running, private_ip_address: '10.1.2.3')
       expect(@ec2_instances).to receive(:create).with(
         image_id: 'ami-34b5535c',
         security_groups: 'build',
@@ -61,8 +69,12 @@ RSpec.describe RemoteBuilder do
         instance_initiated_shutdown_behavior: 'terminate',
         key_name: 'manage',
         block_device_mappings: [{
-          virtual_name: 'vol-998c9fdb',
-          device_name: '/dev/sdf'
+          device_name: '/dev/sde',
+          virtual_name: 'ephemeral0'
+        },
+        {
+          device_name: '/dev/sdf',
+          virtual_name: 'ephemeral1'
         }]
       ).and_return(instance)
       subject.with_instance do |x, y|
@@ -71,14 +83,14 @@ RSpec.describe RemoteBuilder do
     end
 
     it 'should spin down an EC2 instance on finish' do
-      instance = double(private_ip_address: '10.1.2.3')
+      instance = double(private_ip_address: '10.1.2.3', status: :running)
       expect(@ec2_instances).to receive(:create).and_return(instance)
       expect(instance).to receive(:terminate)
       subject.with_instance {}
     end
 
     it 'should not yield until the instance has an IP address' do
-      instance = double(terminate: {})
+      instance = double(terminate: {}, status: :running)
       expect(@ec2_instances).to receive(:create).and_return(instance)
       expect(instance).to receive(:private_ip_address).and_return(nil, nil, '10.1.2.3', '10.1.2.3', '10.1.2.3', '10.1.2.3')
       subject.with_instance do |x, y|
@@ -87,7 +99,7 @@ RSpec.describe RemoteBuilder do
     end
 
     it 'should wait for the instance to listen on port 22' do
-      instance = double(terminate: {}, private_ip_address: '10.1.2.3')
+      instance = double(terminate: {}, private_ip_address: '10.1.2.3', status: :running)
       expect(@ec2_instances).to receive(:create).and_return(instance)
       expect(subject).to receive(:can_connect_on_port_22?).with('10.1.2.3').and_return(false, false, true, true)
       subject.with_instance do |x, y|
@@ -97,7 +109,8 @@ RSpec.describe RemoteBuilder do
 
     it 'should start an SSH session' do
       shell = double()
-      instance = double(terminate: {}, private_ip_address: '10.1.2.3')
+      allow(shell).to receive(:exec).and_return(true)
+      instance = double(terminate: {}, private_ip_address: '10.1.2.3', status: :running)
       expect(@ec2_instances).to receive(:create).and_return(instance)
       expect(subject).to receive(:with_machine_shell).with('10.1.2.3').and_yield(shell)
       subject.with_instance do |x, y|
@@ -123,7 +136,7 @@ RSpec.describe RemoteBuilder do
       @machine_shell = instance_double('MachineShell')
       allow(subject).to receive(:with_instance).and_yield(@instance, @machine_shell)
       allow(@machine_shell).to receive(:upload_r).and_return(true)
-      allow(@machine_shell).to receive(:download_r).and_return(true)
+      allow(@machine_shell).to receive(:download).and_return(true)
       allow(@machine_shell).to receive(:exec).and_return(true)
       allow(@machine_shell).to receive(:mkdir_p).and_return(true)
       allow(@machine_shell).to receive(:md5sum).and_return('abcdef123456abcdef123456abcdef12')
@@ -139,29 +152,22 @@ RSpec.describe RemoteBuilder do
     end
 
     it 'should copy the build file in, unzip it, and cd into it' do
-      expect(@machine_shell).to receive(:upload_r).with(@archive.path, 'archive.tar.gz')
-      expect(@machine_shell).to receive(:mkdir_p).with('build')
-      expect(@machine_shell).to receive(:exec).with([ 'cd', 'build' ])
-      expect(@machine_shell).to receive(:exec).with([ 'unzip', '../archive.tar.gz' ])
+      expect(@machine_shell).to receive(:exec).with('cd build && tar zxf ../archive.tar.gz').and_return(true)
       subject.build(@archive.path, [ 'echo foo' ], '/output/path')
     end
 
     it 'should run build commands' do
-      ran_echo = false
-      allow(@machine_shell).to receive(:exec) do |command|
-        ran_echo = true if command == 'echo foo'
-      end
+      expect(@machine_shell).to receive(:exec).with('cd build && echo foo').and_return(true)
       subject.build(@archive.path, [ 'echo foo' ], '/output/path')
-      expect(ran_echo).to be(true)
     end
 
     it 'should copy the archive file out' do
-      expect(@machine_shell).to receive(:download_r).with('archive.zip', '/output/path')
+      expect(@machine_shell).to receive(:download).with('build/archive.zip', '/output/path')
       subject.build(@archive_path, [], '/output/path')
     end
 
     it 'should return the md5' do
-      expect(@machine_shell).to receive(:md5sum).with('archive.zip').and_return('abcdef12345')
+      expect(@machine_shell).to receive(:md5sum).with('build/archive.zip').and_return('abcdef12345')
       expect(subject.build(@archive_path, [], '/output/path')).to eq('abcdef12345')
     end
   end

@@ -12,7 +12,7 @@ RSpec.describe Operations::Install do
 
   it 'should modify the symlink' do
     expect(@machine).to receive(:shell).and_yield(@shell)
-    expect(@shell).to receive(:ln_sf).with('/tmp/files', '/tmp/install').and_return(true)
+    expect(@shell).to receive(:ln_sfT).with('/tmp/files', '/tmp/install').and_return(true)
     expect(subject.run).to be(true)
   end
 end

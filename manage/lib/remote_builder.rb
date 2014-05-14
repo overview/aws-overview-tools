@@ -24,6 +24,20 @@ class RemoteBuilder
     @pause_duration = hash[:pause_duration] || hash['pause_duration'] || 1
   end
 
+  # Runs the given block with two parameters: an AWS::EC2::Instance and a
+  # MachineShell.
+  #
+  # The build environment has these properties:
+  #
+  # * ~/.sbt, ~/.ivy2 and ~/.npm are cached on a volume specified by
+  #   `cache_volume_id`
+  # * `build` is a SSD-backed directory. It's fast.
+  # * `build/` contains the contents of the Source's `archive.tar.gz`.
+  #
+  # When this block exits, the instance is spun down.
+  #
+  # Every time you call this block, it costs a bit of money. We spin down the
+  # EC2 instance even if the block fails.
   def with_instance(&block)
     $log.info('remote-builder') { "Creating instance" }
     instance = @ec2.instances.create(
