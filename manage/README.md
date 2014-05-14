@@ -4,6 +4,31 @@ This program runs on its own `m1.micro` instance on Amazon Web Services.
 (That means you don't need to install anything other than an ssh client on your
 computer to deploy Overview.)
 
+# Install `overview-manage` script on your computer
+
+1. Install `~/.aws/aws-overview-credentials.sh` [as we describe it on the Wiki](https://github.com/overview/overview-server/wiki/Deploying-from-scratch-to-amazon#amazon-web-services-aws-authentication)
+
+2. Put this in a `bin` directory on your computer:
+```sh
+#!/bin/sh
+
+. ~/.aws/aws-overview-credentials.sh
+# Find MANAGE_SERVER public address at https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:
+MANAGE_SERVER="ubuntu@ec2-XXX-XXX-XXX-XXX.compute-1.amazonaws.com"
+
+if [ "$1" = "ssh" ]; then
+  if [ -n "$2" ] && [ -n "$3" ]; then
+    IP_ADDRESS_COMMAND="overview-manage status | grep '$2' | grep '$3' | head -n 1 | cut -f 4"
+    SSH_COMMAND="ssh \$($IP_ADDRESS_COMMAND)"
+    ssh -t "$MANAGE_SERVER" $SSH_COMMAND
+  else
+    ssh -t "$MANAGE_SERVER" "env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY bash --login"
+  fi
+else
+  ssh -t "$MANAGE_SERVER" "env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY bash --login /usr/local/bin/overview-manage $@"
+fi
+```
+
 # Quick start: Recipes
 
 * To deploy new code: `overview-manage deploy overview-server@_tag_ production`
@@ -64,8 +89,10 @@ Let's sum that up. Here's where things are stored:
 
 # Development
 
-You need Ruby >= 1.9.2. (You get bonus points for using Ruby >= 2.0.0.)
+You need Ruby >= 2.0.
 
     bundle install
     bundle exec guard
     # and then edit code
+
+Write a unit test that breaks; write code to fix it; repeat.
