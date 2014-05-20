@@ -86,6 +86,10 @@ machine_types:
       - config-common
       - config-database
 
+  logstash:
+    components:
+      - config-common
+
 remote_build:
   availability_zone: us-east-1a
   security_group: build
