@@ -10,6 +10,7 @@ class BuildAwsImage < AwsImage
       nodejs-dev
       npm
       openjdk-7-jdk
+      rsyslog-relp
       zip
     )
   end

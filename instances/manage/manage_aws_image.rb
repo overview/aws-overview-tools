@@ -8,6 +8,7 @@ class ManageAwsImage < AwsImage
       'git',
       'zip',
       'unzip',
+      'rsyslog-relp',
       'ruby'
     ]
   end
