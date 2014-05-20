@@ -49,6 +49,8 @@ components:
     deploy_commands:
       - sh /opt/overview/config-searchindex/scripts/start.sh
 
+  config-common:
+    <<: *build_config_component
   config-web:
     <<: *build_config_component
   config-worker:
@@ -61,11 +63,13 @@ components:
 machine_types:
   web:
     components:
+      - config-common
       - config-web
       - frontend
 
   worker:
     components:
+      - config-common
       - config-worker
       - worker
       - documentset-worker
@@ -74,10 +78,12 @@ machine_types:
   searchindex:
     components:
       - search-index
+      - config-common
       - config-searchindex
 
   database:
     components:
+      - config-common
       - config-database
 
 remote_build:
