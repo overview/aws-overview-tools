@@ -70,14 +70,15 @@ Nouns:
 
 Verbs:
 
-* You **build** a *source* to produce a *source artifact*. This is slow. (If it were quick, we wouldn't need the source artifacts in the first place: we'd build on the fly.)
-* You **publish** a *source artifact* to a *component* to produce a *component artifact* on each *machine* running that component.
-* You **install** a *component artifact* on each *machine* running that *component* to stop a previously-running *version* (if any) and start the new version instead. (This step causes user-facing downtime; it should last a few milliseconds, tops.)
-* You can **start**, **stop** and **restart** a *component* on a *machine*.
-* You **deploy** a *source* to *build* it, *publish* all its *components*  to all *machines* and *install* all the resulting *component artifacts*.
-* You can **clean** to delete old *source artifacts* and all corresponding *component artifacts* on all *machines*. (By default, we'll keep a _few_ old artifacts around, in case we need to roll back quickly.)
+* You **build** a *source* to produce a *source artifact*. This is slow. (If it were quick, we wouldn't need the source artifacts in the first place: we'd build on the fly.) (*side-effect*: building deletes old versions of the source artifact from the `manage` instance.)
+* You **prepare** a *source artifact* to produce *component artifacts* for all machines in a specific *environment*. (*side-effect*: preparing deletes old versions of the component artifacts from the `manage` instance.)
+* You **publish** a *component artifact* to a *machine* to produce a *component artifact* on each *machine* running that component. (*side-effect*: publishing deletes old versions of the component artifacts from each machine.)
+* You **install** a *component artifact* on each *machine* running that *component* to adjust a symlink so the new *version* is in the final location. (Your components should not rely on the symlink staying constant, since installing will switch it while they are running.)
+* You **deploy** a *component artifact* to a *machine* to restart the components in question.
 
-Let's sum that up. Here's where things are stored:
+The **build** - **prepare** - **publish** - **install** - **deploy** commands form a pipeline: each command relies on the return value of the command before it. So even though **deploy** is a very fast operation, it can be slow if the other steps are slow.
+
+Here's where things are stored:
 
 | Bunch of files | Key properties | Where it is | What you can do with it |
 | -------------- | -------------- | ----------- | ----------------------- |

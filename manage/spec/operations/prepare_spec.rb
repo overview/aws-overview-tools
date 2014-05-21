@@ -4,6 +4,9 @@ require 'base64'
 require 'fileutils'
 require 'ostruct'
 
+require 'cleaner'
+require 'machine_shell'
+
 RSpec.describe Operations::Prepare do
   module OperationsPrepareConstants
     # Zip with one file, "foo/bar.txt", contents "baz"
@@ -15,6 +18,17 @@ RSpec.describe Operations::Prepare do
       zAQAAAAEAAAACwAYAAAAAAABAAAAtIE+AAAAZm9vL2Jhci50eHRVVAUAAyoeaVN1eAsAAQToAwAA
       BOgDAABQSwUGAAAAAAIAAgCbAAAAhwAAAAAA
       ')
+  end
+
+  before(:each) do
+    @machine_shell_class = class_double('MachineShell')
+    stub_const('MachineShell', @machine_shell_class)
+    @machine_shell = instance_double('MachineShell')
+    allow(@machine_shell_class).to receive(:new).with(nil).and_return(@machine_shell)
+
+    @cleaner = class_double('Cleaner')
+    stub_const('Cleaner', @cleaner)
+    allow(@cleaner).to receive(:clean)
   end
 
   describe 'with mocked source_artifact and component' do
@@ -103,6 +117,11 @@ RSpec.describe Operations::Prepare do
       ensure
         file.close!
       end
+    end
+
+    it 'should clean old components after preparing' do
+      expect(@cleaner).to receive(:clean).with(:component_artifacts, @machine_shell)
+      subject.run
     end
 
     it 'should interpolate <%= environment %> and <%= component %>' do

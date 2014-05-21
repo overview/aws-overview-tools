@@ -3,6 +3,8 @@ require 'digest'
 require 'shell'
 require 'tempfile'
 
+require 'cleaner'
+require 'machine_shell'
 require 'source'
 require 'operations/build'
 require 'remote_builder'
@@ -30,6 +32,15 @@ RSpec.describe Operations::Build do
     @source_archive_file = Tempfile.new('overview-manage-operations-build-spec')
     @source_archive_file.write(TarballContents)
     @source_archive_file.close()
+
+    @machine_shell_class = class_double('MachineShell')
+    stub_const('MachineShell', @machine_shell_class)
+    @machine_shell = instance_double('MachineShell')
+    allow(@machine_shell_class).to receive(:new).with(nil).and_return(@machine_shell)
+
+    @cleaner = class_double('Cleaner')
+    stub_const('Cleaner', @cleaner)
+    allow(@cleaner).to receive(:clean)
 
     @source = instance_double('Source',
       name: 'source-name',
@@ -179,6 +190,11 @@ RSpec.describe Operations::Build do
       ensure
         file.close!
       end
+    end
+
+    it 'should clean old versions after build' do
+      expect(@cleaner).to receive(:clean).with(:source_artifacts, @machine_shell)
+      subject.run
     end
 
     describe 'with the SourceArtifact .run returns' do

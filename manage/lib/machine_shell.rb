@@ -1,20 +1,30 @@
 require 'shellwords'
 require 'net/scp'
 
+require_relative 'component_artifact'
+require_relative 'source_artifact'
 require_relative 'log'
+require_relative 'command_executors/base'
+require_relative 'command_executors/local'
+require_relative 'command_executors/ssh'
 
-# An SSH connection to a Machine, with only a few hard-coded commands.
+# Something that runs commands.
+#
+# If initialized with a Net::SSH::Session, the commands will run remotely.
+# Otherwise, the commands will run on this computer.
 class MachineShell
+  ComponentArtifactWithTimestamp = Struct.new(:component_artifact, :timestamp)
+  SourceArtifactWithTimestamp = Struct.new(:source_artifact, :timestamp)
+
   attr_reader(:ssh) # a Net::SSH::Session
 
-  class CommandFailedException < Exception
-    def initialize(message)
-      super(message)
-    end
-  end
-
-  def initialize(ssh)
+  def initialize(ssh = nil)
     @ssh = ssh
+    @command_executor = if @ssh
+      CommandExecutors::Ssh.new(@ssh)
+    else
+      CommandExecutors::Local.new
+    end
   end
 
   # Deletes all files in a given path.
@@ -33,6 +43,13 @@ class MachineShell
     exec([ 'ln', '-sfT', src, dest ])
   end
 
+  # Returns the full path of the symlink, "path".
+  def readlink(path)
+    exec([ 'readlink', path ])
+  rescue CommandExecutors::CommandFailedException => e
+    nil
+  end
+
   # Creates all directories in the given path.
   #
   # Returns true if the creation worked (even if the path already existed).
@@ -48,7 +65,7 @@ class MachineShell
   # corrupt, which is far more likely (because of an aborted upload).
   def is_component_artifact_valid?(path)
     exec("(cd #{Shellwords.escape(path)}/files && md5sum --status -c ../md5sum.txt)")
-  rescue CommandFailedException
+  rescue CommandExecutors::CommandFailedException
     false
   end
 
@@ -82,10 +99,7 @@ class MachineShell
 
   # Runs md5sum on the host and returns the MD5 sum.
   def md5sum(path)
-    command = "md5sum -b #{Shellwords.escape(path)}"
-    $log.info(@ssh.host) { command }
-    ret = ssh.exec!(command)
-
+    ret = exec([ 'md5sum', '-b', path ])
     md5 = ret
       .downcase
       .lines
@@ -96,8 +110,40 @@ class MachineShell
     if md5
       md5
     else
-      raise CommandFailedException.new(ret.strip)
+      raise CommandExecutors::CommandFailedException.new(ret.strip)
     end
+  end
+
+  # Returns an Array of { component_artifact: ..., timestamp: ... } values.
+  #
+  # This lists all artifacts on the machine in question.
+  def component_artifacts_with_timestamps
+    exec(%w(find /opt/overview/manage/component-artifacts -maxdepth 3 -mindepth 3 -type d -printf) << "%P/%T@\n")
+      .lines.map(&:chomp)
+      .reject { |l| l.empty?}
+      .map do |s|
+        component, sha, environment, timestamp = s.split('/')
+        ComponentArtifactWithTimestamp.new(
+          ComponentArtifact.new(component, sha, environment),
+          Time.at(timestamp.to_f)
+        )
+      end
+  end
+
+  # Returns an Array of { source_artifact: ..., timestamp: ... } values.
+  #
+  # This lists all artifacts on the machine in question.
+  def source_artifacts_with_timestamps
+    exec(%w(find /opt/overview/manage/source-artifacts -maxdepth 2 -mindepth 2 -type d -printf) << "%P/%T@\n")
+      .lines.map(&:chomp)
+      .reject { |l| l.empty?}
+      .map do |s|
+        source, sha, timestamp = s.split('/')
+        SourceArtifactWithTimestamp.new(
+          SourceArtifact.new(source, sha),
+          Time.at(timestamp.to_f)
+        )
+      end
   end
 
   # Executes an arbitrary command on the remote server.
@@ -113,45 +159,9 @@ class MachineShell
     exec_command(cmd)
   end
 
-  private
+  protected
 
   def exec_command(command)
-    $log.info(@ssh.host) { "Running #{command}" }
-
-    status = nil
-
-    @ssh.open_channel do |channel|
-      channel.exec(command) do |ch, success|
-        if success
-          ch.on_data do |ch2, data|
-            data.lines.each do |line|
-              $log.info(@ssh.host) { line.chomp }
-            end
-          end
-
-          ch.on_extended_data do |ch2, type, data|
-            data.lines.each do |line|
-              $log.warn(@ssh.host) { line.chomp }
-            end
-          end
-
-          ch.on_request('exit-status') do |ch, data|
-            status = data.read_long
-          end
-        else
-          raise RuntimeError.new("Command could not be executed")
-        end
-      end
-    end
-
-    @ssh.loop { status.nil? }
-
-    msg = "Command exited with status #{status}"
-    if status != 0
-      raise CommandFailedException.new(msg)
-    else
-      $log.info(@ssh.host) { msg }
-      true
-    end
+    @command_executor.exec_command(command)
   end
 end

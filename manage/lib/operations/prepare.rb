@@ -1,8 +1,10 @@
 require 'erb'
 require 'fileutils'
 
+require_relative '../cleaner'
 require_relative '../component_artifact'
 require_relative '../log'
+require_relative '../machine_shell'
 
 module Operations
   # Derives a ComponentArtifact from a SourceArtifact and Component
@@ -19,7 +21,7 @@ module Operations
   #     component_artifact.md5sum_path # Manifest
   #     component_artifact.valid?      # should be true
   #
-  # When you run, Build does this:
+  # When you run, Prepare does this:
   #
   # 1. Extracts the SourceArtifact to a (temporary) build directory
   # 2. Runs `component.prepare_commands` in order as shell commands
@@ -28,6 +30,7 @@ module Operations
   # 4. Generates an md5sum checksum file and puts it in
   #    `component_artifact.md5sum_path`
   # 5. Deletes the build directory
+  # 6. Deletes old component artifacts
   #
   # Build environment
   # -----------------
@@ -98,7 +101,16 @@ module Operations
         end
       end
 
+      clean_old_component_artifacts
+
       component_artifact
+    end
+
+    private
+
+    def clean_old_component_artifacts
+      shell = MachineShell.new(nil)
+      Cleaner.clean(:component_artifacts, shell)
     end
   end
 end

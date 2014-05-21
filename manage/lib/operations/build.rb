@@ -1,7 +1,9 @@
 require 'digest'
 require 'fileutils'
 
+require_relative '../cleaner'
 require_relative '../log'
+require_relative '../machine_shell'
 require_relative '../remote_builder'
 
 module Operations
@@ -30,6 +32,7 @@ module Operations
   #    `source_artifact.md5sum_path`
   # 6. Deletes the build directory
   # 7. Deletes the git archive
+  # 8. Cleans up old versions of the build
   #
   # Remote builds
   # -------------
@@ -89,10 +92,17 @@ module Operations
         end
       end
 
+      clean_old_source_artifacts
+
       source_artifact
     end
 
     private
+
+    def clean_old_source_artifacts
+      shell = MachineShell.new(nil)
+      Cleaner.clean(:source_artifacts, shell)
+    end
 
     def build_on_ec2_instance(zip_path, md5sum_path)
       $log.info('build') { "Building on a new EC2 instance" }
