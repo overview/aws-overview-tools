@@ -11,7 +11,7 @@ $log.formatter = proc do |severity, time, progname, msg|
   color = if level > Logger::INFO
     # Something bad
     '0;31' # red
-  elsif /\d+\.\d+\.\d+\.\d+/ =~ progname
+  elsif progname == 'local' || /\d+\.\d+\.\d+\.\d+/ =~ progname
     # Running a command
     '0;32' # green
   else
