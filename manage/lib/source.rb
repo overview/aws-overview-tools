@@ -51,7 +51,7 @@ class Source
   end
 
   def revparse(treeish)
-    repo.revparse(treeish)
+    repo.revparse("#{treeish}^{commit}")
   end
 
   # Returns a Tempfile which is a tarball git repo's files in the directory
