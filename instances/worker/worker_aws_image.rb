@@ -4,7 +4,11 @@ require_relative '../common/aws_image'
 
 class WorkerAwsImage < AwsImage
   def packages
-    super + [ 'openjdk-7-jre-headless', 'rsyslog-relp' ]
+    super + %w(
+      openjdk-7-jre-headless
+      rsyslog-relp
+      libreoffice
+    )
   end
 
   def self.type_tag

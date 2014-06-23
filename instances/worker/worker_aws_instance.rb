@@ -9,6 +9,6 @@ class WorkerAwsInstance < AwsInstance
   end
 
   def default_instance_type
-    'm1.medium'
+    'm3.large'
   end
 end
