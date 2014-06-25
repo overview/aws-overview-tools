@@ -51,7 +51,14 @@ class Source
   end
 
   def revparse(treeish)
-    repo.revparse("#{treeish}^{commit}")
+    ret = if treeish =~ /\A[a-zA-Z0-9]{40}\Z/
+      # https://github.com/schacon/ruby-git/issues/155
+      treeish
+    else
+      repo.revparse("#{treeish}^{commit}")
+    end
+    $log.info('source') { "Revparse of #{treeish}: #{ret}" }
+    ret
   end
 
   # Returns a Tempfile which is a tarball git repo's files in the directory
