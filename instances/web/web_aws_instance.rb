@@ -9,6 +9,6 @@ class WebAwsInstance < AwsInstance
   end
 
   def default_instance_type
-    'm1.medium'
+    'm3.medium'
   end
 end
