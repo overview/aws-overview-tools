@@ -2,7 +2,7 @@
 
 require_relative '../common/aws_image'
 
-class SearchIndexAwsImage < AwsImage
+class SearchindexAwsImage < AwsImage
   def packages
     super + %w(
       openjdk-7-jre-headless

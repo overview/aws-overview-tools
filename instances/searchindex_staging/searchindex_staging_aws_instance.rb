@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
-require_relative '../worker/worker_aws_instance'
+require_relative '../searchindex/searchindex_aws_instance'
 
-class SearchindexStagingAwsInstance < WorkerAwsInstance
+class SearchindexStagingAwsInstance < SearchindexAwsInstance
   def security_group
     'searchindex-staging'
   end

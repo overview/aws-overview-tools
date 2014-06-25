@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require_relative '../common/aws_instance'
-require_relative 'searchindex_aws_image'
+require_relative './searchindex_aws_image'
 
 class SearchindexAwsInstance < AwsInstance
   def image_class
