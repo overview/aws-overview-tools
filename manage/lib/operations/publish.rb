@@ -29,6 +29,7 @@ module Operations
         end
 
         ret = shell.rm_rf(@component_artifact.path) && \
+          shell.exec("sudo mkdir -p /opt/overview && sudo chown ubuntu:ubuntu /opt/overview") && \
           shell.mkdir_p(File.dirname(@component_artifact.path)) && \
           shell.upload_r(@component_artifact.path, @component_artifact.path)
 
