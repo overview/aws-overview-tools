@@ -4,7 +4,10 @@ require_relative '../common/aws_image'
 
 class DatabaseAwsImage < AwsImage
   def packages
-    super + [ 'postgresql-9.1', 'rsyslog-relp' ]
+    super + %w(
+      postgresql
+      rsyslog-relp
+    )
   end
 
   def self.type_tag
