@@ -132,10 +132,17 @@ class AwsImage
   def run_ssh_commands(ssh)
     ssh.exec("sudo perl -pi -e 's/# *(.* universe)$/$1/' /etc/apt/sources.list")
     ssh.exec("sudo apt-get -q update")
-    ssh.exec("sudo DEBIAN_FRONTEND=noninteractive apt-get -q -y dist-upgrade")
+    ssh.exec("sudo DEBIAN_FRONTEND=noninteractive apt-get -q -y -o Dpkg::Options::='--force-confnew' dist-upgrade")
+
     # I don't know why, but we seem to need to do this again. (Is it because GPG updates?)
     ssh.exec("sudo apt-get -q update")
-    ssh.exec("sudo DEBIAN_FRONTEND=noninteractive apt-get -q -y dist-upgrade")
+    ssh.exec("sudo DEBIAN_FRONTEND=noninteractive apt-get -q -y -o Dpkg::Options::='--force-confnew' dist-upgrade")
+
+    # Ubuntu 14.04 comes with broken kernel _and_ broken kernel-upgrade procedure
+    # https://bugs.launchpad.net/ubuntu/+source/apt/+bug/1323772
+    ssh.exec("sudo rm -f /boot/grub/menu.lst")
+    ssh.exec("sudo update-grub-legacy-ec2 -y")
+
     if !packages.empty?
       ssh.exec("sudo DEBIAN_FRONTEND=noninteractive apt-get -q -y install #{packages.join(' ')}")
     end
