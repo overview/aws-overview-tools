@@ -13,7 +13,14 @@ HAPROXY_URL="http://haproxy.1wt.eu/download/1.5/src/devel/#{HAPROXY_BASENAME}"
 class WebAwsImage < AwsImage
   # We need to build HAProxy from scratch
   def packages
-    super + [ 'openjdk-7-jre-headless', 'build-essential', 'libpcre3-dev', 'libssl-dev', 'rsyslog-relp' ]
+    super + %w(
+      openjdk-7-jre-headless
+      build-essential
+      libpcre3-dev
+      libssl-dev
+      redis-server
+      rsyslog-relp
+    )
   end
 
   def run_ssh_commands(ssh)
