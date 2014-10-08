@@ -80,7 +80,7 @@ class RemoteBuilder
     end
 
   ensure
-    instance.terminate
+    instance.terminate if instance
   end
 
   def build(source_archive_path, build_commands, destination_archive_path)
