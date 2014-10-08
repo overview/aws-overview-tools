@@ -33,7 +33,7 @@ if !ENV['AWS_KEYPAIR_NAME']
   raise Exception.new("You must specify the AWS_KEYPAIR_NAME environment variable. It should be a keypair you can access.")
 end
 
-for image_class in [ BuildAwsImage, ManageAwsImage, DatabaseAwsImage, SearchIndexAwsImage, WebAwsImage, WorkerAwsImage ]
+for image_class in [ BuildAwsImage, ManageAwsImage, DatabaseAwsImage, SearchindexAwsImage, WebAwsImage, WorkerAwsImage ]
   puts "Creating #{image_class.name}..."
   puts "Spinning up vanilla instance..."
   instance = VanillaAwsInstance.new(:zone => 'us-east-1a', :instance_type => 'm3.large').create!
