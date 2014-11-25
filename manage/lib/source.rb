@@ -4,13 +4,40 @@ require_relative 'log'
 
 # A wrapper around a bare Git repo
 class Source
-  # An archive file of a source at a version
+  # An archive file of a source at a version.
+  #
+  # The file will be deleted when it is finalized or when `unlink` is called.
   class SourceArchive
     attr_reader(:sha, :path)
 
     def initialize(sha, path)
       @sha = sha
       @path = path
+
+      ObjectSpace.define_finalizer(self, Remover.new(path))
+    end
+
+    def unlink
+      ObjectSpace.undefine_finalizer(self)
+      if !@data[1]
+        File.unlink(@data[0])
+        @data[1] = true
+      end
+    end
+
+    private
+
+    class Remover
+      def initialize(path)
+        @path = path
+      end
+
+      def call(*args)
+        begin
+          File.unlink(@path)
+        rescue Errno::ENOENT
+        end
+      end
     end
   end
 
