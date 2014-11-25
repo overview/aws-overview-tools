@@ -19,9 +19,10 @@ require_relative 'vanilla/vanilla_aws_image'
 require_relative 'build/build_aws_image'
 require_relative 'database/database_aws_image'
 require_relative 'manage/manage_aws_image'
+require_relative 'searchindex/searchindex_aws_image'
+require_relative 'test_slave/test_slave_aws_image'
 require_relative 'web/web_aws_image'
 require_relative 'worker/worker_aws_image'
-require_relative 'searchindex/searchindex_aws_image'
 
 if !ENV['AWS_ACCESS_KEY_ID']
   raise Exception.new("You must specify the AWS_ACCESS_KEY_ID environment variable.")
@@ -33,7 +34,7 @@ if !ENV['AWS_KEYPAIR_NAME']
   raise Exception.new("You must specify the AWS_KEYPAIR_NAME environment variable. It should be a keypair you can access.")
 end
 
-for image_class in [ BuildAwsImage, ManageAwsImage, DatabaseAwsImage, SearchindexAwsImage, WebAwsImage, WorkerAwsImage ]
+for image_class in [ BuildAwsImage, ManageAwsImage, DatabaseAwsImage, SearchIndexAwsImage, TestSlaveAwsImge, WebAwsImage, WorkerAwsImage ]
   puts "Creating #{image_class.name}..."
   puts "Spinning up vanilla instance..."
   instance = VanillaAwsInstance.new(:zone => 'us-east-1a', :instance_type => 'm3.large').create!
