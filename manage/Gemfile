@@ -11,6 +11,5 @@ group :test do
 end
 
 group :development do
-  gem 'debugger'
   gem 'guard-rspec', require: false
 end
