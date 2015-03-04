@@ -9,6 +9,6 @@ class DatabaseAwsInstance < AwsInstance
   end
 
   def default_instance_type
-    'm3.medium' # it'll be IO-bound
+    'm3.large'
   end
 end

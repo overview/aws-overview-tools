@@ -13,6 +13,6 @@ class SearchindexAwsInstance < AwsInstance
   end
 
   def default_instance_type
-    'm3.medium'
+    'm3.large'
   end
 end
