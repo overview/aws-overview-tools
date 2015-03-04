@@ -3,6 +3,7 @@ require_relative 'commands/status'
 require_relative 'commands/add_instance'
 require_relative 'commands/remove_instance'
 require_relative 'commands/build_command'
+require_relative 'commands/rebuild_command'
 require_relative 'commands/prepare_command'
 require_relative 'commands/publish_command'
 require_relative 'commands/install_command'
@@ -29,6 +30,7 @@ class Runner
       Commands::AddInstance,
       Commands::RemoveInstance,
       Commands::BuildCommand,
+      Commands::RebuildCommand,
       Commands::PrepareCommand,
       Commands::PublishCommand,
       Commands::InstallCommand,
