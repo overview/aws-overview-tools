@@ -39,22 +39,10 @@ components:
     <<: *build_overview_server_component
     deploy_commands:
       - sh /opt/overview/config-worker/scripts/start.sh
-  message-broker:
-    <<: *build_overview_server_component
-    deploy_commands:
-      - sh /opt/overview/config-searchindex/scripts/start.sh
-  search-index:
-    <<: *build_overview_server_component
-    deploy_commands:
-      - sh /opt/overview/config-searchindex/scripts/start.sh
 
-  config-common:
-    <<: *build_config_component
   config-web:
     <<: *build_config_component
   config-worker:
-    <<: *build_config_component
-  config-database:
     <<: *build_config_component
   config-searchindex:
     <<: *build_config_component
@@ -62,32 +50,14 @@ components:
 machine_types:
   web:
     components:
-      - config-common
       - config-web
       - frontend
 
   worker:
     components:
-      - config-common
       - config-worker
       - worker
       - documentset-worker
-
-  searchindex:
-    components:
-      - search-index
-      - message-broker
-      - config-common
-      - config-searchindex
-
-  database:
-    components:
-      - config-common
-      - config-database
-
-  logstash:
-    components:
-      - config-common
 
 remote_build:
   availability_zone: us-east-1a
