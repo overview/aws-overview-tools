@@ -63,27 +63,6 @@ class PipelineCommandRunner
     end
   end
 
-  # Builds the given source name at the given version, clobbering any cached
-  # SourceArtifact.
-  #
-  # This is useful if the build process depends upon a changing environment.
-  # The next prepare(), publish(), install() or deploy() will use this new
-  # SourceArtifact.
-  #
-  # Returns a SourceArtifact that we assume is valid.
-  def rebuild(source_name, version)
-    source = @runner.sources[source_name]
-
-    source.fetch
-    sha = source.revparse(version)
-
-    maybe_existing_artifact = SourceArtifact.new(source_name, sha)
-    shell = MachineShell.new(nil)
-    shell.rm_rf(maybe_existing_artifact.path)
-
-    build(source_name, version)
-  end
-
   # Prepares the given source at the given version for the given environment.
   #
   # We assume the source name refers to an actual source. We don't know if the
