@@ -1,0 +1,114 @@
+#cloud-config
+hostname: staging-searchindex
+repo_update: true
+repo_upgrade: all
+apt_sources:
+  - source: "deb http://packages.elasticsearch.org/elasticsearch/1.4/debian stable main"
+    key: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v2.0.14 (GNU/Linux)
+
+      mQENBFI3HsoBCADXDtbNJnxbPqB1vDNtCsqhe49vFYsZN9IOZsZXgp7aHjh6CJBD
+      A+bGFOwyhbd7at35jQjWAw1O3cfYsKAmFy+Ar3LHCMkV3oZspJACTIgCrwnkic/9
+      CUliQe324qvObU2QRtP4Fl0zWcfb/S8UYzWXWIFuJqMvE9MaRY1bwUBvzoqavLGZ
+      j3SF1SPO+TB5QrHkrQHBsmX+Jda6d4Ylt8/t6CvMwgQNlrlzIO9WT+YN6zS+sqHd
+      1YK/aY5qhoLNhp9G/HxhcSVCkLq8SStj1ZZ1S9juBPoXV1ZWNbxFNGwOh/NYGldD
+      2kmBf3YgCqeLzHahsAEpvAm8TBa7Q9W21C8vABEBAAG0RUVsYXN0aWNzZWFyY2gg
+      KEVsYXN0aWNzZWFyY2ggU2lnbmluZyBLZXkpIDxkZXZfb3BzQGVsYXN0aWNzZWFy
+      Y2gub3JnPokBOAQTAQIAIgUCUjceygIbAwYLCQgHAwIGFQgCCQoLBBYCAwECHgEC
+      F4AACgkQ0n1mbNiOQrRzjAgAlTUQ1mgo3nK6BGXbj4XAJvuZDG0HILiUt+pPnz75
+      nsf0NWhqR4yGFlmpuctgCmTD+HzYtV9fp9qW/bwVuJCNtKXk3sdzYABY+Yl0Cez/
+      7C2GuGCOlbn0luCNT9BxJnh4mC9h/cKI3y5jvZ7wavwe41teqG14V+EoFSn3NPKm
+      TxcDTFrV7SmVPxCBcQze00cJhprKxkuZMPPVqpBS+JfDQtzUQD/LSFfhHj9eD+Xe
+      8d7sw+XvxB2aN4gnTlRzjL1nTRp0h2/IOGkqYfIG9rWmSLNlxhB2t+c0RsjdGM4/
+      eRlPWylFbVMc5pmDpItrkWSnzBfkmXL3vO2X3WvwmSFiQbkBDQRSNx7KAQgA5JUl
+      zcMW5/cuyZR8alSacKqhSbvoSqqbzHKcUQZmlzNMKGTABFG1yRx9r+wa/fvqP6OT
+      RzRDvVS/cycws8YX7Ddum7x8uI95b9ye1/Xy5noPEm8cD+hplnpU+PBQZJ5XJ2I+
+      1l9Nixx47wPGXeClLqcdn0ayd+v+Rwf3/XUJrvccG2YZUiQ4jWZkoxsA07xx7Bj+
+      Lt8/FKG7sHRFvePFU0ZS6JFx9GJqjSBbHRRkam+4emW3uWgVfZxuwcUCn1ayNgRt
+      KiFv9jQrg2TIWEvzYx9tywTCxc+FFMWAlbCzi+m4WD+QUWWfDQ009U/WM0ks0Kww
+      EwSk/UDuToxGnKU2dQARAQABiQEfBBgBAgAJBQJSNx7KAhsMAAoJENJ9ZmzYjkK0
+      c3MIAIE9hAR20mqJWLcsxLtrRs6uNF1VrpB+4n/55QU7oxA1iVBO6IFu4qgsF12J
+      TavnJ5MLaETlggXY+zDef9syTPXoQctpzcaNVDmedwo1SiL03uMoblOvWpMR/Y0j
+      6rm7IgrMWUDXDPvoPGjMl2q1iTeyHkMZEyUJ8SKsaHh4jV9wp9KmC8C+9CwMukL7
+      vM5w8cgvJoAwsp3Fn59AxWthN3XJYcnMfStkIuWgR7U2r+a210W6vnUxU4oN0PmM
+      cursYPyeV0NX/KQeUeNMwGTFB6QHS/anRaGQewijkrYYoTNtfllxIu9XYmiBERQ/
+      qPDlGRlOgVTd9xUfHFkzB52c70E=
+      =92oX
+      -----END PGP PUBLIC KEY BLOCK-----
+packages:
+  - rsyslog-relp
+  - openjdk-8-jre-headless
+  - elasticsearch
+write_files:
+  - path: /etc/rsyslog.d/39-logstash.conf
+    content: |
+      $ModLoad omrelp
+      *.* :omrelp:10.79.180.239:2514
+  - path: /tmp/apollo.xml.in
+    content: |
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <broker xmlns="http://activemq.apache.org/schema/activemq/apollo">
+        <log_category console="console" security="security" connection="connection" audit="audit"/>
+        <authentication enabled="false"/>
+        <virtual_host id="broker">
+          <host_name>localhost</host_name>
+          <host_name>127.0.0.1</host_name>
+          <host_name>IP_ADDRESS</host_name>
+          <leveldb_store directory="${apollo.base}/data"/>
+          <queue id="document-set-commands" auto_delete_after="0"/>
+          <queue id="file-group-commands" auto_delete_after="0"/> 
+          <queue id="clustering-commands" auto_delete_after="0"/>
+        </virtual_host>
+
+        <web_admin bind="http://127.0.0.1:61680"/>
+        <connector id="tcp" bind="tcp://0.0.0.0:61613" connection_limit="100"/>
+      </broker>
+  - path: /etc/default/elasticsearch
+    content: |
+      ES_HEAP_SIZE=2g
+      MAX_LOCKED_MEMORY=unlimited
+      CONF_DIR=/etc/elasticsearch
+      DATA_DIR=/var/lib/elasticsearch/data
+  - path: /etc/elasticsearch/elasticsearch.yml
+    content: |
+      bootstrap.mlockall: true
+      cluster.name: overview-search-index
+      discovery.zen.ping.multicast.enabled: false
+  - path: /etc/elasticsearch/logging.yml
+    content: |
+      es.logger.level: INFO
+      rootLogger: INFO, syslog
+      logger:
+        action: INFO
+        gateway: INFO
+        index.gateway: INFO
+        indices.recovery: INFO
+        discovery: INFO
+        index.search.slowlog: DEBUG
+        index.indexing.slowlog: DEBUG
+      additivity:
+        index.search.slowlog=false
+        index.indexing.slowlog=false
+      appender:
+        syslog:
+          type: syslog
+          facility: local0
+          layout:
+            type: pattern
+            conversionPattern: "[%-5p][%-25c] %m%n"
+mounts:
+  - [ xvdf, /var/lib/elasticsearch ]
+mount_default_fields: [ None, None, 'auto', 'defaults,nobootwait', '0', '2' ]
+runcmd:
+  - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
+  - /etc/init.d/rsyslog stop
+  - /etc/init.d/rsyslog start
+  - chown -R elasticsearch:elasticsearch /var/lib/elasticsearch
+  - /etc/init.d/elasticsearch start
+  - wget http://mirror.cogentco.com/pub/apache/activemq/activemq-apollo/1.7.1/apache-apollo-1.7.1-unix-distro.tar.gz
+  - tar zxf apache-apollo-1.7.1-unix-distro.tar.gz -C /opt
+  - /opt/apache-apollo-1.7.1/bin/apollo create /var/lib/apollo
+  - sed -e "s/IP_ADDRESS/$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)/" < /tmp/apollo.xml.in > /var/lib/apollo/etc/apollo.xml
+  - ln -s /var/lib/apollo/bin/apollo-broker-service /etc/init.d/
+  - /etc/init.d/apollo-broker-service start
