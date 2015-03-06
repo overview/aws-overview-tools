@@ -6,11 +6,16 @@ packages:
   - rsyslog-relp
   - openjdk-8-jre-headless
   - libreoffice
+  - awscli
 write_files:
   - path: /etc/rsyslog.d/39-logstash.conf
     content: |
       $ModLoad omrelp
       *.* :omrelp:10.79.180.239:2514
+users:
+  - default
+  - name: overview
+    home: /opt/overview
 runcmd:
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
   - /etc/init.d/rsyslog stop

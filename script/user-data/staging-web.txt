@@ -95,6 +95,10 @@ write_files:
       maxmemory-samples 5
       slowlog-log-slower-than 10000
       slowlog-max-len 128
+users:
+  - default
+  - name: overview
+    home: /opt/overview
 runcmd:
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
   - /etc/init.d/rsyslog stop
