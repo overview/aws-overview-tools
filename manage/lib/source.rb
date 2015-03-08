@@ -1,6 +1,7 @@
 require 'git'
 
 require_relative 'log'
+require_relative 's3_bucket'
 
 # A wrapper around a bare Git repo
 class Source
@@ -41,7 +42,7 @@ class Source
     end
   end
 
-  attr_reader(:name, :url, :build_commands)
+  attr_reader(:name, :url, :build_commands, :s3_bucket)
 
   def initialize(hash_or_instance)
     if hash_or_instance.is_a?(Hash)
@@ -49,10 +50,12 @@ class Source
       @url = hash_or_instance['url'] || hash_or_instance[:url]
       @build_commands = hash_or_instance['build_commands'] || hash_or_instance[:build_commands] || []
       @build_remotely = hash_or_instance['build_remotely'] || hash_or_instance[:build_remotely] || false
+      @s3_bucket = S3Bucket.new(hash_or_instance['artifact_bucket'] || hash_or_instance[:artifact_bucket] || 'no-bucket')
     else
       @name = hash_or_instance.name
       @url = hash_or_instance.url
       @build_commands = hash_or_instance.build_commands
+      @s3_bucket = hash_or_instance.s3_bucket
     end
   end
 

@@ -1,13 +1,12 @@
 require_relative 'operations/build'
-require_relative 'operations/prepare'
 require_relative 'operations/publish'
-require_relative 'operations/install'
-require_relative 'operations/deploy'
+require_relative 'operations/restart'
+require_relative 'operations/start'
+require_relative 'operations/stop'
 
-require_relative 'source_artifact'
-require_relative 'machine_shell'
+require_relative 'artifact'
 
-# Runs build/prepare/publish/install/deploy with string arguments.
+# Runs build/publish/restart with string arguments.
 #
 # overview-manage has a "pipeline" of commands which must be executed in order.
 # Each step in the pipeline depends upon the previous step. Each step begins
@@ -24,9 +23,11 @@ require_relative 'machine_shell'
 #
 # * The "build" method just takes a String source and a String version, not
 #   objects.
-# * The "prepare" method takes a String source and a String version, not a
-#   SourceArtifact.
-# * The "prepare" command calls the "build" command automatically.
+# * The "build" method is a no-op if there is already an Artifact for the
+#   given source and version.
+# * The "publish" method takes a String source and a String version, not an
+#   Artifact.
+# * The "publish" command calls the "build" command automatically.
 class PipelineCommandRunner
   def initialize(runner)
     @runner = runner
@@ -34,23 +35,21 @@ class PipelineCommandRunner
 
   # Builds the given source name at the given version.
   #
-  # This is the fastest way to go from Strings to a SourceArtifact.
-  #
   # We assume the source name refers to an actual source. We don't know if the
   # version refers to an actual version; we trust Operations::Build to raise an
   # exception if it doesn't.
   #
-  # If there is already a SourceArtifact for this name and sha (we git fetch
-  # and revparse the version), we skip Building.
+  # If there is already an Artifact for this name and sha (we git fetch and
+  # revparse the version), we skip Building.
   #
-  # Returns a SourceArtifact that we assume is valid.
+  # Returns a valid Artifact.
   def build(source_name, version)
     source = @runner.sources[source_name]
 
     source.fetch
     sha = source.revparse(version)
 
-    try_artifact = SourceArtifact.new(source_name, sha)
+    try_artifact = Artifact.new(source, sha)
     if try_artifact.valid?
       try_artifact
     else
@@ -63,85 +62,53 @@ class PipelineCommandRunner
     end
   end
 
-  # Prepares the given source at the given version for the given environment.
-  #
-  # We assume the source name refers to an actual source. We don't know if the
-  # version refers to an actual version; we trust Operations::Build to raise an
-  # exception if it doesn't.
-  #
-  # Unlike build(), we _always_ do Operations::Prepare::run() on _every_
-  # Component for the source. The rationale: for ComponentArtifacts that
-  # already exist, the build amounts to a no-op.
-  #
-  # Returns an Array of ComponentArtifacts that we assume are valid.
-  def prepare(source_name, version, environment)
-    source_artifact = build(source_name, version)
-
-    components = @runner.components_with_source(source_name)
-
-    components.map do |component|
-      Operations::Prepare.new(source_artifact, component, environment).run
-    end
-  end
-
-  # Publishes components from the given source at the given version to the
-  # given machines.
-  #
-  # This uses prepare() to find all ComponentArtifacts for the given source
-  # at the given version. For each artifact, it finds all relevant Machines.
-  # For each permutation, it calls
-  # Operations::Publish(component_artifact, machine).
+  # Publishes an artifact as the official one for the given machines.
   #
   # We assume all machines share the same environment ('production' or
-  # 'staging').
+  # 'staging'). This lets you type this command:
   #
-  # Returns an Array of [component_artifact, machine ] pairs.
-  def publish(source_name, version, machine_spec)
-    machines = @runner.machines_with_spec(machine_spec)
-
-    throw ArgumentError.new("There are no machines with specification '#{machine_spec}'") if machines.empty?
-
-    environment = machines.first.environment
-
-    prepare(source_name, version, environment)
-      .product(machines)
-      .select{ |ca, m| m.components.include?(ca.component) }
-      .map do |ca, m|
-        Operations::Publish.new(ca, m).run
-        [ ca, m ]
-      end
+  # overview-manage publish overview-server@master production
+  #
+  # Returns nil
+  def publish(source_name, version, environment)
+    artifact = build(source_name, version)
+    Operations::Publish.new(artifact, environment).run
   end
 
-  # Installs published components on the given machines.
+  # Does build -> publish -> restart for the given machines.
   #
-  # This uses publish() to fetch pairs of ComponentArtifacts and Machines.
-  # Then it runs Operations::Install with each pair.
-  #
-  # Returns an Array of [ component_artifact, machine ] pairs.
-  def install(source_name, version, machine_spec)
-    publish(source_name, version, machine_spec)
-      .map do |component_artifact, machine|
-        Operations::Install.new(component_artifact, machine).run
-
-        [ component_artifact, machine ]
-      end
-  end
-
-  # Deploys installed components on the given machines.
-  #
-  # This uses install() to fetch pairs of ComponentArtifacts and Machines.
-  # Then it runs Operations::Deploy with the corresponding (Component, Machine)
-  # pairs.
-  #
-  # Returns an Array of [ component_artifact, machine ] pairs.
+  # Returns nil
   def deploy(source_name, version, machine_spec)
-    ret = install(source_name, version, machine_spec)
+    publish(source_name, version, machine_spec.split('/')[0])
+    restart(machine_spec)
+  end
 
-    ret.each do |component_artifact, machine|
-      component = @runner.components[component_artifact.component]
-      Operations::Deploy.new(component, machine).run
+  # Calls restart for the given machines.
+  def restart(machine_spec)
+    machines(machine_spec).each do |machine|
+      Operations::Restart.new(machine).run
     end
+  end
 
-    ret
+  # Calls start for the given machines.
+  def start(machine_spec)
+    machines(machine_spec).each do |machine|
+      Operations::Start.new(machine).run
+    end
+  end
+
+  # Calls stop for the given matches.
+  def stop(machine_spec)
+    machines(machine_spec).each do |machine|
+      Operations::Stop.new(machine).run
+    end
+  end
+
+  private
+
+  def machines(machine_spec)
+    machines = @runner.machines_with_spec(machine_spec)
+    throw ArgumentError.new("There are no machines with specification '#{machine_spec}'") if machines.empty?
+    machines
   end
 end

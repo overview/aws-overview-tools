@@ -95,6 +95,53 @@ write_files:
       maxmemory-samples 5
       slowlog-log-slower-than 10000
       slowlog-max-len 128
+  - path: /etc/init/overview-frontend.conf
+    content: |
+      description "Overview web server"
+      author "Overview Project"
+      setuid overview
+      setgid overview
+      chdir /opt/overview
+      console output
+      respawn
+      exec /opt/overview/run-frontend.sh
+  - path: /opt/overview/run-frontend.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+
+      aws s3 cp s3://overview-staging-secrets/frontend-env.sh /tmp/frontend-env.sh
+      source /tmp/frontend-env.sh
+
+      function tag_to_ip() {
+        aws ec2 describe-instances \
+          --filter "Name=tag:Name,Values=$1" \
+          --query "Reservations[*].Instances[0].PrivateIpAddress" \
+          --output text
+      }
+
+      DATABASE_SERVER_NAME=$(tag_to_ip $DATABASE_SERVER_NAME_TAG)
+      ES_HOSTS="$(tag_to_ip $ES_HOSTS_TAG):$ES_HOSTS_PORT"
+      MESSAGE_BROKER_URI="tcp://$(tag_to_ip $MESSAGE_BROKER_URI_TAG):$MESSAGE_BROKER_PORT"
+      REDIS_HOST=$(tag_to_ip $REDIS_HOST_TAG)
+
+      aws cp s3://overview-releases/latest/archive.zip /tmp/frontend-archive.zip
+      FILENAMES=$(unzip -p /tmp/frontend-archive.zip archive/frontend/classpath.txt | sed -e 's/^/archive\/lib\//')
+      rm -r /opt/overview/frontend
+      unzip -d /opt/overview/frontend -j $FILENAMES
+
+      exec /usr/bin/java \
+        -cp "/opt/overview/frontend/*" \
+        -DapplyEvolutions.default=true \
+        -Dconfig.resource=production.conf \
+        -Dfile.encoding=UTF8 \
+        -Dhttp.port=9000 \
+        -Dlogback.configurationFile=productionlog.xml \
+        -Dpidfile.path=/tmp/overview-web-server-useless-pid-file \
+        -Duser.timezone=UTC \
+        -Xmx1000m \
+        play.core.server.NettyServer /opt/overview \
+        2>&1 | logger -p local1.notice
 users:
   - default
   - name: overview
@@ -106,3 +153,4 @@ runcmd:
   - /etc/init.d/redis-server restart
   - aws s3 cp s3://overview-staging-secrets/ssl.pem /etc/haproxy/ssl.pem
   - /etc/init.d/haproxy restart
+  - start overview-frontend

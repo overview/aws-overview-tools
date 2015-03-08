@@ -5,7 +5,7 @@ require_relative '../arguments/machines'
 module Commands
   class DeployCommand < Base
     name 'deploy'
-    description 'Deploys components to the specified machines, such that they are running'
+    description 'Publishes an Artifact and restarts services on the specified machines'
     arguments_schema [ Arguments::SourceAtVersion.new, Arguments::Machines.new ]
 
     def run(runner, source_at_version, machines)

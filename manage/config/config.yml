@@ -2,62 +2,39 @@
 sources:
   overview-server:
     url: https://github.com/overview/overview-server.git
+    artifact_bucket: overview-builds
     build_remotely: true
     build_commands:
       - ./build archive.zip
 
-  aws-overview-config:
-    url: https://github.com/overview/aws-overview-config.git
-    build_commands:
-      - bundle install --deployment
-      - env OVERVIEW_CONFIG=/opt/overview/config/manage/config.yml OVERVIEW_SECRETS=/opt/overview/config/manage/secrets.yml ./generate.sh
-      - "(cd generated && zip -r ../archive.zip *)"
-
-build_overview_server_component: &build_overview_server_component
-  source: overview-server
-  prepare_commands:
-    - "(cd source/archive/lib && xargs -I '{}' -a ../<%= component.name %>/classpath.txt cp '{}' ../../../component)"
-
-build_config_component: &build_config_component
-  source: aws-overview-config
-  prepare_commands:
-    - "cp -a source/<%= environment %>/<%= component.name[7..-1] %>/* component"
-  deploy_commands:
-    - "sudo cp -a <%= component.install_path %>/root/* /"
-    - "sh <%= component.install_path %>/scripts/start.sh"
-
-components:
-  frontend:
-    <<: *build_overview_server_component
-    deploy_commands:
-      - sh /opt/overview/config-web/scripts/start.sh
-  worker:
-    <<: *build_overview_server_component
-    deploy_commands:
-      - sh /opt/overview/config-worker/scripts/start.sh
-  documentset-worker:
-    <<: *build_overview_server_component
-    deploy_commands:
-      - sh /opt/overview/config-worker/scripts/start.sh
-
-  config-web:
-    <<: *build_config_component
-  config-worker:
-    <<: *build_config_component
-  config-searchindex:
-    <<: *build_config_component
-
 machine_types:
   web:
-    components:
-      - config-web
-      - frontend
+    start_commands:
+      - start overview-frontend
+
+    stop_commands:
+      - stop overview-frontend
+
+    restart_commands:
+      - stop overview-frontend
+      - sleep 2
+      - start overview-frontend
 
   worker:
-    components:
-      - config-worker
-      - worker
-      - documentset-worker
+    start_commands:
+      - start overview-worker
+      - start overview-documentset-worker
+
+    stop:
+      - stop overview-worker
+      - stop overview-documentset-worker
+
+    restart_commands:
+      - stop overview-worker
+      - stop overview-documentset-worker
+      - sleep 2
+      - start overview-worker
+      - start overview-documentset-worker
 
 remote_build:
   availability_zone: us-east-1a

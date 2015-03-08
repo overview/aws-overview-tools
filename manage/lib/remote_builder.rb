@@ -39,11 +39,15 @@ class RemoteBuilder
   # Every time you call this block, it costs a bit of money. We spin down the
   # EC2 instance even if the block fails.
   def with_instance(&block)
+    instance = nil
+
     $log.info('remote-builder') { "Creating instance" }
-    instance = @ec2.instances.create(
-      availability_zone: availability_zone,
+    reservation = @ec2.run_instances(
+      min_count: 1,
+      max_count: 1,
       image_id: ami_id,
-      security_groups: security_group,
+      placement: { availability_zone: availability_zone },
+      security_groups: [ security_group ],
       instance_type: instance_type,
       instance_initiated_shutdown_behavior: 'terminate',
       key_name: keypair_name,
@@ -55,19 +59,26 @@ class RemoteBuilder
         device_name: '/dev/sdf',
         virtual_name: 'ephemeral1'
       }]
-    )
-    pause while instance.status != :running
+    ).data
+    instance = reservation[:instances][0]
+    $log.info('remote-builder') { "Waiting for instance #{instance[:instance_id]} to start up..." }
+    @ec2.wait_until(:instance_running, instance_ids: [ instance[:instance_id] ])
 
-    $log.info('remote-builder') { "Attaching #{cache_volume_id} to instance #{instance.id}" }
-    volume = @ec2.volumes[cache_volume_id]
-    attachment = volume.attach_to(instance, '/dev/sdg')
-    pause while attachment.status != :attached
+    $log.info('remote-builder') { "Attaching #{cache_volume_id} to instance #{instance[:instance_id]}" }
+    volume = @ec2.attach_volume(
+      volume_id: cache_volume_id,
+      instance_id: instance[:instance_id],
+      device: 'xvdg'
+    ).data
+    @ec2.wait_until(:volume_in_use, volume_ids: [ cache_volume_id ])
 
-    $log.info('remote-builder') { "Waiting for #{instance.id} to respond on port 22" }
-    pause while !instance.private_ip_address
-    nil while !can_connect_on_port_22?(instance.private_ip_address)
+    $log.info('remote-builder') { "Waiting for #{instance[:instance_id]} to respond on port 22" }
+    ip_address = @ec2.describe_instances(instance_ids: [ instance[:instance_id] ])
+      .data[:reservations][0][:instances][0][:private_ip_address]
+    $log.info('remote-builder') { "IP address is #{ip_address}" }
+    nil while !can_connect_on_port_22?(ip_address)
 
-    with_machine_shell(instance.private_ip_address) do |machine_shell|
+    with_machine_shell(ip_address) do |machine_shell|
       $log.info('remote-builder') { "Setting up build environment" }
       # build-cache persists between builds, so we don't need to download tons
       # of dependencies from really slow servers.
@@ -80,7 +91,10 @@ class RemoteBuilder
     end
 
   ensure
-    instance.terminate if instance
+    if instance
+      $log.info('remote-builder') { "Terminating #{instance[:instance_id]}" }
+      @ec2.terminate_instances(instance_ids: [ instance[:instance_id] ])
+    end
   end
 
   def build(source_archive_path, build_commands, destination_archive_path)
@@ -100,7 +114,7 @@ class RemoteBuilder
   protected
 
   def with_machine_shell(ip_address, &block)
-    Net::SSH.start(ip_address, 'ubuntu') do |ssh|
+    Net::SSH.start(ip_address, 'ubuntu', paranoid: false) do |ssh|
       machine_shell = MachineShell.new(ssh)
       yield(machine_shell)
     end

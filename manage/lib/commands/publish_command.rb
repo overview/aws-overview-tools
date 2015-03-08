@@ -1,16 +1,16 @@
 require_relative 'base'
 require_relative '../arguments/source_at_version'
-require_relative '../arguments/machines'
+require_relative '../arguments/environment'
 
 module Commands
   class PublishCommand < Base
     name 'publish'
-    description 'Pushes components to the specified machines'
-    arguments_schema [ Arguments::SourceAtVersion.new, Arguments::Machines.new ]
+    description 'Marks an Artifact as the official version for an environment'
+    arguments_schema [ Arguments::SourceAtVersion.new, Arguments::Environment.new ]
 
-    def run(runner, source_at_version, machines)
+    def run(runner, source_at_version, environment)
       pipeline = PipelineCommandRunner.new(runner)
-      pipeline.publish(source_at_version.source, source_at_version.version, machines)
+      pipeline.publish(source_at_version.source, source_at_version.version, environment)
     end
   end
 end

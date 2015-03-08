@@ -6,7 +6,7 @@ RSpec.describe Arguments::Environment do
 
   describe 'with a runner' do
     before(:each) do
-      @runner = double(environments: Set.new([ 'staging', 'production' ]))
+      @runner = double()
     end
 
     it 'should parse a valid environment' do

@@ -9,10 +9,10 @@ module Arguments
     description 'an environment: either "production" or "staging"'
 
     def parse(runner, string)
-      if runner.environments.include?(string)
+      if [ 'production', 'staging' ].include?(string)
         string
       else
-        raise ArgumentError.new("'#{string}' is not a valid environment. Valid environments are #{runner.environments.to_a.join(', ')}")
+        raise ArgumentError.new("'#{string}' is not a valid environment. Valid environments are 'staging' and 'production'")
       end
     end
   end
