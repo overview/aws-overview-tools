@@ -1,19 +1,17 @@
+require 'aws-sdk'
+
 require_relative 'commands/help'
 require_relative 'commands/status'
 require_relative 'commands/add_instance'
 require_relative 'commands/remove_instance'
 require_relative 'commands/build_command'
-require_relative 'commands/prepare_command'
 require_relative 'commands/publish_command'
-require_relative 'commands/install_command'
 require_relative 'commands/deploy_command'
-#require_relative 'commands/restart'
-#require_relative 'commands/start'
-#require_relative 'commands/stop'
+require_relative 'commands/restart_command'
+require_relative 'commands/start_command'
+require_relative 'commands/stop_command'
 require_relative 'machine'
 require_relative 'store'
-
-require 'aws/ec2'
 
 class Runner
   attr_reader(:state, :commands)
@@ -29,10 +27,11 @@ class Runner
       Commands::AddInstance,
       Commands::RemoveInstance,
       Commands::BuildCommand,
-      Commands::PrepareCommand,
       Commands::PublishCommand,
-      Commands::InstallCommand,
-      Commands::DeployCommand
+      Commands::DeployCommand,
+      Commands::StartCommand,
+      Commands::StopCommand,
+      Commands::RestartCommand
     ]
 
     # Turn into hash of { 'add-instance' => Commands::AddInstance.new }
@@ -73,14 +72,6 @@ class Runner
       .select{ |m| ip_address.nil? || m.ip_address == ip_address }
   end
 
-  def components
-    @store.components
-  end
-
-  def components_with_source(source)
-    components.with_source(source)
-  end
-
   def machine_types
     @store.machine_types
   end
@@ -98,17 +89,7 @@ class Runner
   end
 
   def connect_to_ec2
-    access_key_id = ENV['AWS_ACCESS_KEY_ID']
-    secret_access_key = ENV['AWS_SECRET_ACCESS_KEY']
-
-    if !access_key_id || !secret_access_key
-      raise RuntimeError.new('This command needs you to spin up an EC2 instance, but you are missing AWS credentials. Please try again, setting the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables. See https://github.com/overview/overview-server/wiki/Deploying-from-scratch-to-amazon#amazon-web-services-aws-authentication')
-    end
-
-    AWS::EC2.new(
-      access_key_id: access_key_id,
-      secret_access_key: secret_access_key
-    )
+    Aws::EC2::Client.new
   end
 
   def remote_build_config

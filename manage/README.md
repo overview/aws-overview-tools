@@ -31,9 +31,8 @@ fi
 
 # Quick start: Recipes
 
-* To deploy new code: `overview-manage deploy overview-server@_tag_ production`
-* To deploy new code to only one machine: `overview-manage deploy overview-server@_tag_ production/web/10.x.x.x`
-* To deploy new config: `overview-manage deploy aws-overview-config` (_@tag_ is optional: it defaults to `master`)
+* To deploy new code: `overview-manage deploy _tag_ production`
+* To deploy new code to only one machine: `overview-manage deploy _tag_ production/web/10.x.x.x`
 
 These all restart the running code on the servers. The restarts all happen within the same 30s, no matter how long the build takes. If the build fails, nothing happens.
 
@@ -45,11 +44,9 @@ See "Concepts" below to understand what these commands do. This is a mere cheat-
 
 | Command | Summary | Example | Duration |
 | ------- | ------- | ------- | -------- |
-| `build` | Compiles source code | `overview-manage build overview-server@deploy-2014-05-14.01` | 10min for `overview-server` |
-| `prepare` | Bundles built files for the given environment | `overview-manage prepare overview-server@deploy-2014-05-14.01 staging` | 30s: 5s per component of `overview-server` |
-| `publish` | Put bundles on servers | `overview-manage publish overview-server@deploy-2014-05-14.01 staging/web` | 30s: 5s per `overview-server` component per server |
-| `install` | Symlinks bundles to their final locations | `overview-manage install overview-server@deploy-2014-05-14.01 staging/web` | 1s |
-| `deploy` | Runs commands to restart components | `overview-manage deploy overview-server@deploy-2014-05-14.01 staging` | 5s per component of `overview-server` (this is how long the scripts take) |
+| `build` | Compiles source code, uploads _sha1_.zip to S3 | `overview-manage build deploy-2014-05-14.01` | 10min |
+| `publish` | Make "staging.zip" or "production.zip" point to the built zip | `overview-manage publish deploy-2014-05-14.01 staging | 5s |
+| `deploy` | Runs commands to restart components | `overview-manage deploy deploy-2014-05-14.01 staging` (or `staging/worker`) | 5s per server |
 
 Each of these commands runs the commands before it; if they've already been done, a quick verification will occur instead.
 
@@ -61,32 +58,25 @@ Nouns:
 
 * A **source** is a Git repository that contains code.
 * A **version** is a version of the *source*, identified by a "tree-ish". (For instance: `master`, `tag1`, `aec6a94` or `3fbd31873e7b220dcbe535e06099a1856051b935`.)
-* A **source artifact** is a set of files representing a compiled *source* at a given *version*. (For instance: a zipfile.) It includes a checksum for verifying itself.
+* An **artifact** is a set of files representing a compiled *source* at a given *version*. (For instance: a zipfile.) It includes a checksum for verifying itself.
 * An **environment** is one of **production** or **staging**. We test stuff on *staging*; our live site is on *production*.
-* A **component** is, conceptually, a service. Theoretically, it _should_ come from multiple *source artifacts*. Right now, it comes from just one. (That's awkward: if one *source artifact* contains config files and another contains jar files, then you need two components to run the service. We're working on it.)
-* A **machine** is an Amazon EC2 Instance. It runs in one *environment*, and it runs many *components*. We identify it by its private IP address, e.g., `10.x.x.x`.
-* A **machine type** is a recipe: it specifies how to build a *machine* and which *components* run on it. We identify it as, say, `production/web`.
-* A **component artifact** is a group of files on a *machine*, built from a *source artifact*. It can be run. (It includes a checksum for verifying itself.) For instance: jar files.
+* A **machine** is an Amazon EC2 Instance. It runs in one *environment*. We identify it by its private IP address, e.g., `10.x.x.x`.
+* A **machine type** is a recipe: it specifies *machine*'s configuration and instance type. We identify, say, `production/web`.
 
 Verbs:
 
-* You **build** a *source* to produce a *source artifact*. This is slow. (If it were quick, we wouldn't need the source artifacts in the first place: we'd build on the fly.) (*side-effect*: building deletes old versions of the source artifact from the `manage` instance.)
-* You **prepare** a *source artifact* to produce *component artifacts* for all machines in a specific *environment*. (*side-effect*: preparing deletes old versions of the component artifacts from the `manage` instance.)
-* You **publish** a *component artifact* to a *machine* to produce a *component artifact* on each *machine* running that component. (*side-effect*: publishing deletes old versions of the component artifacts from each machine.)
-* You **install** a *component artifact* on each *machine* running that *component* to adjust a symlink so the new *version* is in the final location. (Your components should not rely on the symlink staying constant, since installing will switch it while they are running.)
-* You **deploy** a *component artifact* to a *machine* to restart the components in question.
-
-The **build** - **prepare** - **publish** - **install** - **deploy** commands form a pipeline: each command relies on the return value of the command before it. So even though **deploy** is a very fast operation, it can be slow if the other steps are slow.
+* You **build** a *source* to produce an *artifact* on S3. This is slow.
+* You **publish** an *artifact* to indicate, on S3, that it is the latest version in the given *environment*.
+* You **restart** services on a *machine* to make it use the latest published version.
+* You **deploy** services to a *machine* by running *build*, *publish* and *restart*.
 
 Here's where things are stored:
 
 | Bunch of files | Key properties | Where it is | What you can do with it |
 | -------------- | -------------- | ----------- | ----------------------- |
 | source | URL | the `manage` instance, `/opt/overview/manage/sources/SOURCE.git` (bare GitHub clone) | *build* at a given version |
-| source artifact | version | the `manage` instance, `/opt/overview/manage/source-artifacts/SOURCE/VERSION/` | *prepare* to publish; *verify* |
-| (manage) component artifact | component, version, environment | the `manage` instance, `/opt/overview/manage/component-artifacts/COMPONENT/VERSION/ENVIRONMENT` | *publish* to all relevant machines; *verify* |
-| (machine) component artifact | component, version, environment | each *machine* with that *component*, `/opt/overview/manage/component-artifacts/COMPONENT/VERSION/ENVIRONMENT` (same exact files as on `manage`) | *install*; *verify* |
-| installed component artifact | | each *machine* with that *component*, usually a symlink, `/opt/overview/COMPONENT` | *start*, *stop*, *restart* |
+| artifact | version | S3, `overview-builds/VERSION.{zip,md5sum}` | *prepare* to publish; *verify* |
+| published artifact | nothing | S3, `overview-builds/ENVIRONMENT.{zip,md5sum}` |
 
 # Development
 
