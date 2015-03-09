@@ -1,5 +1,5 @@
 #cloud-config
-hostname: staging-searchindex
+hostname: #OVERVIEW_ENVIRONMENT#-searchindex
 repo_update: true
 repo_upgrade: all
 apt_sources:

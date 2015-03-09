@@ -1,9 +1,11 @@
 #cloud-config
-hostname: staging-web
+hostname: #OVERVIEW_ENVIRONMENT#-web
 repo_update: true
 repo_upgrade: all
 packages:
   - awscli
+  - ca-certificates
+  - ca-certificates-java
   - haproxy
   - openjdk-8-jre-headless
   - redis-server
@@ -32,7 +34,7 @@ write_files:
         mode http
         bind 0.0.0.0:80
         timeout client 50s
-        redirect prefix https://staging.overviewproject.org code 301 
+        redirect prefix https://#OVERVIEW_ENVIRONMENT_ADDRESS# code 301 
 
         capture request header Host len 40
         capture request header X-Forwarded-For len 50
@@ -53,8 +55,8 @@ write_files:
 
         timeout client 50s
 
-        acl canonical_url hdr_dom(Host) eq staging.overviewproject.org
-        redirect prefix https://staging.overviewproject.org code 301 if !canonical_url
+        acl canonical_url hdr_dom(Host) eq #OVERVIEW_ENVIRONMENT_ADDRESS#
+        redirect prefix https://#OVERVIEW_ENVIRONMENT_ADDRESS# code 301 if !canonical_url
 
         # Add the HSTS header with a 1 year max-age
         rspadd Strict-Transport-Security:\ max-age=31536000
@@ -112,8 +114,8 @@ write_files:
     content: |
       #!/bin/bash
 
-      aws s3 cp s3://overview-staging-secrets/frontend-env.sh /tmp/frontend-env.sh
-      aws s3 cp s3://overview-builds/staging.zip /tmp/archive.zip
+      aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/frontend-env.sh /tmp/frontend-env.sh
+      aws s3 cp s3://overview-builds/#OVERVIEW_ENVIRONMENT#.zip /tmp/archive.zip
       FILENAMES=$(unzip -qq -p /tmp/archive.zip archive/frontend/classpath.txt | sed -e 's/^/archive\/lib\//')
       rm -rf /opt/overview/frontend
       unzip -qq -d /opt/overview/frontend -j /tmp/archive.zip $FILENAMES
@@ -141,6 +143,6 @@ runcmd:
   - /etc/init.d/rsyslog stop
   - /etc/init.d/rsyslog start
   - /etc/init.d/redis-server restart
-  - aws s3 cp s3://overview-staging-secrets/ssl.pem /etc/haproxy/ssl.pem
+  - aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/ssl.pem /etc/haproxy/ssl.pem
   - /etc/init.d/haproxy restart
   - start overview-frontend

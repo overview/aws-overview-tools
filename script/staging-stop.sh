@@ -14,7 +14,7 @@ fatal() {
 type -p aws >/dev/null || fatal 'You need the `aws` command in your $PATH'
 type -p ssh >/dev/null || fatal 'You need the `ssh` command in your $PATH'
 
-instance_ids=$(aws ec2 describe-instances --filter Name=instance.group-name,Values=database-staging,web-staging,searchindex-staging,worker-staging | grep InstanceId | cut -d'"' -f4 | xargs)
+instance_ids=$(aws ec2 describe-instances --filter Name=tag:Environment,Values=staging | grep InstanceId | cut -d'"' -f4 | xargs)
 
 if [ -z "$instance_ids" ]; then
   echo 'Not terminating any staging instances: there are none'

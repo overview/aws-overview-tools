@@ -1,9 +1,11 @@
 #cloud-config
-hostname: staging-worker
+hostname: #OVERVIEW_ENVIRONMENT#-worker
 repo_update: true
 repo_upgrade: all
 packages:
   - awscli
+  - ca-certificates
+  - ca-certificates-java
   - libreoffice
   - openjdk-8-jre-headless
   - rsyslog-relp
@@ -43,8 +45,8 @@ write_files:
       SYSLOG_OUTPUT=$3 # "local1.notice" or "local2.notice"
       MAX_MEMORY=$4 # "2500m" or "700m"
 
-      aws s3 cp s3://overview-staging-secrets/worker-env.sh /tmp/$SERVER-env.sh
-      aws s3 cp s3://overview-builds/staging.zip /tmp/$SERVER-archive.zip
+      aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/worker-env.sh /tmp/$SERVER-env.sh
+      aws s3 cp s3://overview-builds/#OVERVIEW_ENVIRONMENT#.zip /tmp/$SERVER-archive.zip
       FILENAMES=$(unzip -qq -p /tmp/$SERVER-archive.zip archive/$SERVER/classpath.txt | sed -e 's/^/archive\/lib\//')
       rm -rf /opt/overview/$SERVER
       unzip -qq -d /opt/overview/$SERVER -j /tmp/$SERVER-archive.zip $FILENAMES

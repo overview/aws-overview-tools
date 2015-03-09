@@ -1,5 +1,5 @@
 #cloud-config
-hostname: staging-database
+hostname: #OVERVIEW_ENVIRONMENT#-database
 repo_update: true
 repo_upgrade: all
 packages:
@@ -47,6 +47,4 @@ runcmd:
   - /etc/init.d/postgresql stop
   - chown postgres:postgres /var/lib/postgresql /etc/postgresql -R
   - /etc/init.d/postgresql start
-  - sudo -u postgres psql overview -c "UPDATE file SET contents_location = REPLACE(contents_location, 's3:overview-production-', 's3:overview-staging-')"
-  - sudo -u postgres psql overview -c "UPDATE file SET view_location = REPLACE(view_location, 's3:overview-production-', 's3:overview-staging-')"
-  - sudo -u postgres psql overview -c "UPDATE page SET data_location = REPLACE(data_location, 's3:overview-production-', 's3:overview-staging-')"
+  - if [ "#OVERVIEW_ENVIRONMENT#" = "staging" ]; then sudo -u postgres psql overview -c "UPDATE file SET contents_location = REPLACE(contents_location, 's3:overview-production-', 's3:overview-staging-'), view_location = REPLACE(view_location, 's3:overview-production-', 's3:overview-staging-'); UPDATE page SET data_location = REPLACE(data_location, 's3:overview-production-', 's3:overview-staging-')"; fi
