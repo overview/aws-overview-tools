@@ -152,11 +152,7 @@ ec2_run_instance() {
       run_worker
       ;;
     web)
-      id=$(run_web)
-      aws ec2 associate-address \
-        --instance-id $id \
-        --public-ip $(dig +short staging.overviewproject.org)
-      echo $id
+      run_web
       ;;
     *)
       fatal "Invalid instance type '$1'"
@@ -180,6 +176,14 @@ start_instance() {
     instance_ip=$(wait_for_instance_ip $instance_id)
     >&2 echo "Instance $instance_id has IP address $instance_ip"
 
+    if [ 'web' = "$instance_type" ]; then
+      public_ip=$(dig +short staging.overviewproject.org)
+      aws ec2 associate-address \
+        --instance-id $instance_id \
+        --public-ip $public_ip
+      >&2 echo "Instance $instance_id associated with public IP $public_ip"
+    fi
+
     >&2 overview-manage add-instance staging/$instance_type/$instance_ip
   else
     >&2 echo "There was already a $instance_type instance"
@@ -190,23 +194,16 @@ start_instance() {
 instance_types=(database searchindex worker web)
 instance_ids=()
 for instance_type in ${instance_types[@]}; do
-  echo "Ensuring $instance_type is launched..."
-  instance_ids[${#instance_ids[@]}]=`start_instance $instance_type`
+  >&2 echo "Ensuring $instance_type is launched..."
+  instance_id=$(start_instance $instance_type)
+  instance_ids+=($instance_id)
 done
 
 for instance_id in ${instance_ids[@]}; do
-  echo "Ensuring $instance_id is finished initializing..."
+  >&2 echo "Ensuring $instance_id is finished initializing..."
   instance_ip=$(wait_for_instance_ip $instance_id)
   wait_for_ssh $instance_ip
   wait_for_cloud_init $instance_ip
 done
 
-
-
-echo "Done! Now:"
-echo
-echo "1. Commit something to aws-overview-config"
-echo "2. overview-manage deploy aws-overview-config staging"
-echo "3. overview-manage deploy overview-server@master staging"
-echo
-echo "TODO: automate all this stuff!"
+>&2 echo "Up and running"
