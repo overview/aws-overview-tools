@@ -129,7 +129,7 @@ run_searchindex() {
   snapshot_id=$(get_searchindex_snapshot_id)
   aws ec2 run-instances \
     --image-id $BASE_IMAGE \
-    --instance-type m3.large \
+    --instance-type c4.large \
     --placement AvailabilityZone=$AVAILABILITY_ZONE \
     --key-name manage \
     --iam-instance-profile Name=staging-searchindex \

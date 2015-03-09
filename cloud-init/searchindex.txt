@@ -66,7 +66,7 @@ write_files:
       </broker>
   - path: /etc/default/elasticsearch
     content: |
-      ES_HEAP_SIZE=2g
+      ES_HEAP_SIZE=1600m
       MAX_LOCKED_MEMORY=unlimited
       CONF_DIR=/etc/elasticsearch
       DATA_DIR=/var/lib/elasticsearch/data
