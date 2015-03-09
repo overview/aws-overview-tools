@@ -138,6 +138,7 @@ users:
   - name: overview
     home: /opt/overview
 runcmd:
+  - sudo /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
   - chown overview:overview /opt/overview -R
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
   - /etc/init.d/rsyslog stop
