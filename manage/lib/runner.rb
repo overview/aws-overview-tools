@@ -55,8 +55,7 @@ class Runner
       Machine.new(
         environment: instance.env,
         ip_address: instance.ip_address,
-        type: instance.type,
-        components: Set.new(type.components)
+        type: type
       )
     end
   end
@@ -68,7 +67,7 @@ class Runner
 
     machines
       .select{ |m| m.environment == environment }
-      .select{ |m| type.nil? || m.type == type }
+      .select{ |m| type.nil? || m.type.name == type }
       .select{ |m| ip_address.nil? || m.ip_address == ip_address }
   end
 

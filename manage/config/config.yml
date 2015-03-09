@@ -10,31 +10,33 @@ sources:
 machine_types:
   web:
     start_commands:
-      - start overview-frontend
+      - sudo start overview-frontend
 
     stop_commands:
-      - stop overview-frontend
+      - sudo stop overview-frontend
 
     restart_commands:
-      - stop overview-frontend
+      - sudo stop overview-frontend
       - sleep 2
-      - start overview-frontend
+      - sudo start overview-frontend
 
   worker:
     start_commands:
-      - start overview-worker
-      - start overview-documentset-worker
+      - sudo start overview-worker
+      - sudo start overview-documentset-worker
 
     stop:
-      - stop overview-worker
-      - stop overview-documentset-worker
+      - sudo stop overview-worker
+      - sudo stop overview-documentset-worker
 
     restart_commands:
-      - stop overview-worker
-      - stop overview-documentset-worker
+      - sudo stop overview-worker
+      - sudo stop overview-documentset-worker
       - sleep 2
-      - start overview-worker
-      - start overview-documentset-worker
+      - sudo start overview-worker
+      - sudo start overview-documentset-worker
+  database: {}
+  searchindex: {}
 
 remote_build:
   availability_zone: us-east-1a

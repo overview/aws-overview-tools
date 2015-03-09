@@ -13,8 +13,12 @@ class Machine
   end
 
   def to_s
-    "#{environment}/#{type}/#{ip_address}"
+    "#{environment}/#{type.name}/#{ip_address}"
   end
+
+  def start_commands; type.start_commands; end
+  def stop_commands; type.stop_commands; end
+  def restart_commands; type.restart_commands; end
 
   def shell(&block)
     return block.call(@shell) if @shell
