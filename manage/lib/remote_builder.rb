@@ -6,6 +6,7 @@ class RemoteBuilder
   attr_reader(
     :ami_id,
     :availability_zone,
+    :build_init_commands,
     :cache_volume_id,
     :ec2,
     :instance_type,
@@ -22,6 +23,7 @@ class RemoteBuilder
     @cache_volume_id = hash[:cache_volume_id] || hash['cache_volume_id']
     @keypair_name = hash[:keypair_name] || hash['keypair_name']
     @pause_duration = hash[:pause_duration] || hash['pause_duration'] || 1
+    @build_init_commands = hash[:init_commands] || hash['init_commands'] || 1
   end
 
   # Runs the given block with two parameters: an AWS::EC2::Instance and a
@@ -80,13 +82,9 @@ class RemoteBuilder
 
     with_machine_shell(ip_address) do |machine_shell|
       $log.info('remote-builder') { "Setting up build environment" }
-      # build-cache persists between builds, so we don't need to download tons
-      # of dependencies from really slow servers.
-      machine_shell.exec('mkdir -p build-cache && sudo mount /dev/xvdg build-cache && ln -sf `pwd`/build-cache/.ivy2 . && ln -sf `pwd`/build-cache/.npm . && ln -sf `pwd`/build-cache/.sbt .')
-      # ephemeral0 and ephemeral1 are SSD-backed, making them fast
-      machine_shell.exec('sudo umount /dev/xvde && sudo mkswap -f /dev/xvde && sudo swapon /dev/xvde')
-      machine_shell.exec('mkdir -p build && sudo mkfs.ext2 /dev/xvdf && sudo mount /dev/xvdf build && sudo chown ubuntu:ubuntu build')
-
+      for command in build_init_commands
+        machine_shell.exec(command)
+      end
       yield(instance, machine_shell)
     end
 

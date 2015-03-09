@@ -42,6 +42,12 @@ remote_build:
   availability_zone: us-east-1a
   security_group: build
   instance_type: c3.large
-  ami_id: ami-c212afaa
+  ami_id: ami-ee793a86 # https://cloud-images.ubuntu.com/releases/14.10/release/ - 64-bit, hvm-ssd
   cache_volume_id: vol-998c9fdb
   keypair_name: manage
+  init_commands:
+    - sudo apt-get -qq update
+    - sudo apt-get -qq install build-essential nodejs nodejs-dev nodejs-legacy npm openjdk-8-jre-headless zip
+    - mkdir -p build-cache && sudo mount /dev/xvdg build-cache && ln -sf `pwd`/build-cache/.ivy2 . && ln -sf `pwd`/build-cache/.npm . && ln -sf `pwd`/build-cache/.sbt .
+    - sudo umount /dev/xvde && sudo mkswap -f /dev/xvde && sudo swapon /dev/xvde
+    - mkdir -p build && sudo mkfs.ext2 /dev/xvdf && sudo mount /dev/xvdf build && sudo chown ubuntu:ubuntu build
