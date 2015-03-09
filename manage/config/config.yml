@@ -47,7 +47,7 @@ remote_build:
   keypair_name: manage
   init_commands:
     - sudo apt-get -qq update
-    - sudo apt-get -qq install build-essential nodejs nodejs-dev nodejs-legacy npm openjdk-8-jre-headless zip
+    - sudo apt-get -qq -y install build-essential nodejs nodejs-dev nodejs-legacy npm openjdk-8-jre-headless zip
     - mkdir -p build-cache && sudo mount /dev/xvdg build-cache && ln -sf `pwd`/build-cache/.ivy2 . && ln -sf `pwd`/build-cache/.npm . && ln -sf `pwd`/build-cache/.sbt .
     - sudo umount /dev/xvde && sudo mkswap -f /dev/xvde && sudo swapon /dev/xvde
     - mkdir -p build && sudo mkfs.ext2 /dev/xvdf && sudo mount /dev/xvdf build && sudo chown ubuntu:ubuntu build
