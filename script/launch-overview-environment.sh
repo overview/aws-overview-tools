@@ -1,22 +1,39 @@
 #!/bin/bash
 
-# Creates volumes and starts up staging instances.
+# Starts up an Overview environment by launching EC2 instances, attaching
+# volumes and attaching elastic IPs.
 
 fatal() {
   >&2 echo "$1"
   exit 1
 }
 
+usage() {
+  >&2 echo "Usage: $0 ENVIRONMENT"
+  >&2 echo
+  >&2 echo "For instance: '$0 staging'"
+  exit 1
+}
+
 : ${AWS_ACCESS_KEY_ID:?'You must set the AWS_ACCESS_KEY_ID environment variable'}
 : ${AWS_SECRET_ACCESS_KEY:?'You must set the AWS_SECRET_ACCESS_KEY environment variable'}
 : ${AWS_DEFAULT_REGION:?'You must set the AWS_DEFAULT_REGION environment variable'}
-: ${OVERVIEW_MANAGE_HOST:?'You must set the OVERVIEW_MANAGE_HOST environment variables'}
+: ${OVERVIEW_MANAGE_HOST:?'You must set the OVERVIEW_MANAGE_HOST environment variable, e.g., "ubuntu@ec2-12-34-56-78.compute-1.amazonaws.com"'}
 type -p aws >/dev/null || fatal 'You need the `aws` command in your $PATH'
 type -p ssh >/dev/null || fatal 'You need the `ssh` command in your $PATH'
 
 DIR="$(dirname $0)"
+OVERVIEW_ENVIRONMENT=$1
+[ "$OVERVIEW_ENVIRONMENT" = "staging" ] || [ "$OVERVIEW_ENVIRONMENT" = "production" ] || usage
 AVAILABILITY_ZONE=us-east-1a
 BASE_IMAGE=ami-f0693098 # https://cloud-images.ubuntu.com/utopic/current/ us-east-1 64-bit hvm
+
+# Global variables: OVERVIEW_ENVIRONMENT and OVERVIEW_HOSTNAME
+if [ "$OVERVIEW_ENVIRONMENT" = "staging" ]; then
+  OVERVIEW_HOSTNAME=staging.overviewproject.org
+else
+  OVERVIEW_HOSTNAME=www.overviewproject.org
+fi
 
 wait_for_ssh() {
   success=$(ssh $OVERVIEW_MANAGE_HOST ssh -o ConnectTimeout=1 -o StrictHostKeyChecking=no $1 echo 'success' 2>/dev/null)
@@ -52,6 +69,13 @@ get_instance_ip() {
     --query 'Reservations[*].Instances[*].PrivateIpAddress'
 }
 
+get_volume_id() {
+  aws ec2 describe-volumes \
+    --filters "Name=tag:Name,Values=$1" \
+    --output text \
+    --query 'Volumes[*].VolumeId'
+}
+
 wait_for_instance_ip() {
   ip=$(get_instance_ip $1)
   if [ -z "$ip" ]; then
@@ -82,7 +106,7 @@ get_searchindex_snapshot_id() {
 get_instance_id() {
   aws ec2 describe-instances \
     --filters \
-      "Name=instance.group-name,Values=staging-$1" \
+      "Name=instance.group-name,Values=$OVERVIEW_ENVIRONMENT-$1" \
       "Name=instance-state-name,Values=pending,running" \
     --query 'Reservations[*].Instances[*].InstanceId' \
     --output text
@@ -92,77 +116,144 @@ get_instance_id() {
 #
 # Arguments:
 #   $1: SERVER, one of "web", "worker", "database" and "searchindex"
-#   $2: OVERVIEW_ENVIRONMENT, either "staging" or "production"
-#   $3: OVERVIEW_ENVIRONMENT_ADDRESS, either "staging.overviewproject.org" or "www.overviewproject.org"
 #
 # The temporary file is created from cloud-init/$SERVER, and all instances of
 # OVERVIEW_ENVIRONMENT# and #OVERVIEW_ENVIRONMENT_ADDRESS# within it are
-# replaced with $2 and $3.
+# replaced with, say, "staging" and "staging.overviewproject.org".
 generate_cloud_init_file() {
   ret=$(tempfile)
   cat "$DIR"/../cloud-init/$1.txt \
-    | sed -e "s/#OVERVIEW_ENVIRONMENT#/$2/" \
-    | sed -e "s/#OVERVIEW_ENVIRONMENT_ADDRESS#/$3/" \
+    | sed -e "s/#OVERVIEW_ENVIRONMENT#/$OVERVIEW_ENVIRONMENT/" \
+    | sed -e "s/#OVERVIEW_ENVIRONMENT_ADDRESS#/$OVERVIEW_HOSTNAME/" \
     > "$ret"
 
   echo $ret
 }
 
-run_database() {
-  init_file=$(generate_cloud_init_file database staging)
+run_staging_database() {
+  init_file=$(generate_cloud_init_file database)
   snapshot_id=$(get_database_snapshot_id)
   aws ec2 run-instances \
     --image-id $BASE_IMAGE \
     --instance-type m3.large \
     --placement AvailabilityZone=$AVAILABILITY_ZONE \
     --key-name manage \
-    --iam-instance-profile Name=staging-database \
-    --security-groups staging-database \
+    --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-database \
+    --security-groups $OVERVIEW_ENVIRONMENT-database \
     --user-data "file://$init_file" \
     --block-device-mappings "[{\"DeviceName\":\"/dev/sdf\",\"Ebs\":{\"SnapshotId\":\"$snapshot_id\",\"DeleteOnTermination\":true,\"VolumeType\":\"gp2\"}}]" \
     | grep 'InstanceId' | cut -d'"' -f4
   rm $init_file
 }
 
-run_searchindex() {
-  init_file=$(generate_cloud_init_file searchindex staging)
+run_production_database() {
+  init_file=$(generate_cloud_init_file database)
+  volume_id=$(get_volume_id 'production-database')
+
+  # Start the instance without its volume.
+  instance_id=$(aws ec2 run-instances \
+    --image-id $BASE_IMAGE \
+    --instance-type m3.large \
+    --placement AvailabilityZone=$AVAILABILITY_ZONE \
+    --key-name manage \
+    --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-database \
+    --security-groups $OVERVIEW_ENVIRONMENT-database \
+    --user-data "file://$init_file" \
+    | grep 'InstanceId' | cut -d'"' -f4)
+  rm $init_file
+
+  # Attach the volume. There's a race here, but we should be fine.
+  aws ec2 attach-volume \
+    --volume-id $volume_id \
+    --instance_id $instance_id \
+    --device 'xvdf' \
+    >/dev/null
+
+  echo $instance_id
+}
+
+run_database() {
+  if [ 'staging' = "$OVERVIEW_ENVIRONMENT" ]; then
+    run_staging_database
+  else
+    run_production_database
+  fi
+}
+
+run_staging_searchindex() {
+  init_file=$(generate_cloud_init_file searchindex)
   snapshot_id=$(get_searchindex_snapshot_id)
   aws ec2 run-instances \
+    --image-id $BASE_IMAGE \
+    --instance-type m3.large \
+    --placement AvailabilityZone=$AVAILABILITY_ZONE \
+    --key-name manage \
+    --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-searchindex \
+    --security-groups $OVERVIEW_ENVIRONMENT-searchindex \
+    --user-data "file://$init_file" \
+    --block-device-mappings "[{\"DeviceName\":\"/dev/sdf\",\"Ebs\":{\"SnapshotId\":\"$snapshot_id\",\"DeleteOnTermination\":true,\"VolumeType\":\"gp2\"}}]" \
+    | grep 'InstanceId' | cut -d'"' -f4
+  rm $init_file
+}
+
+run_production_searchindex() {
+  init_file=$(generate_cloud_init_file searchindex)
+  volume_id=$(get_volume_id "production-searchindex")
+
+  # Start the instance without its volume
+  instance_id=$(aws ec2 run-instances \
     --image-id $BASE_IMAGE \
     --instance-type c4.large \
     --placement AvailabilityZone=$AVAILABILITY_ZONE \
     --key-name manage \
-    --iam-instance-profile Name=staging-searchindex \
-    --security-groups staging-searchindex \
+    --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-searchindex \
+    --security-groups $OVERVIEW_ENVIRONMENT-searchindex \
     --user-data "file://$init_file" \
     --block-device-mappings "[{\"DeviceName\":\"/dev/sdf\",\"Ebs\":{\"SnapshotId\":\"$snapshot_id\",\"DeleteOnTermination\":true,\"VolumeType\":\"gp2\"}}]" \
-    | grep 'InstanceId' | cut -d'"' -f4
+    | grep 'InstanceId' | cut -d'"' -f4)
   rm $init_file
+
+  # Attach the volume. There's a race here, but we should be fine.
+  aws ec2 attach-volume \
+    --volume-id $volume_id \
+    --instance-id $instance_id \
+    --device 'xvdf' \
+    >/dev/null
+
+  echo $instance_id
+}
+
+run_searchindex() {
+  if [ 'staging' = "$OVERVIEW_ENVIRONMENT" ]; then
+    run_staging_searchindex
+  else
+    run_production_searchindex
+  fi
 }
 
 run_worker() {
-  init_file=$(generate_cloud_init_file worker staging)
+  init_file=$(generate_cloud_init_file worker)
   aws ec2 run-instances \
     --image-id $BASE_IMAGE \
     --instance-type m3.medium \
     --placement AvailabilityZone=$AVAILABILITY_ZONE \
     --key-name manage \
-    --iam-instance-profile Name=staging-worker \
-    --security-groups staging-worker \
+    --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-worker \
+    --security-groups $OVERVIEW_ENVIRONMENT-worker \
     --user-data "file://$init_file" \
     | grep 'InstanceId' | cut -d'"' -f4
   rm $init_file
 }
 
 run_web() {
-  init_file=$(generate_cloud_init_file web staging staging.overviewproject.org)
+  init_file=$(generate_cloud_init_file web)
   aws ec2 run-instances \
     --image-id $BASE_IMAGE \
     --instance-type m3.medium \
     --placement AvailabilityZone=$AVAILABILITY_ZONE \
     --key-name manage \
-    --iam-instance-profile Name=staging-web \
-    --security-groups staging-web \
+    --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-web \
+    --security-groups $OVERVIEW_ENVIRONMENT-web \
     --user-data "file://$init_file" \
     | grep 'InstanceId' | cut -d'"' -f4
   rm $init_file
@@ -198,8 +289,8 @@ start_instance() {
     aws ec2 create-tags \
       --resources $instance_id \
       --tags \
-        "Key=Name,Value=staging-$instance_type" \
-        "Key=Environment,Value=staging" \
+        "Key=Name,Value=$OVERVIEW_ENVIRONMENT-$instance_type" \
+        "Key=Environment,Value=$OVERVIEW_ENVIRONMENT" \
         >/dev/null
     >&2 echo "Launched $instance_type instance $instance_id"
 
@@ -207,7 +298,7 @@ start_instance() {
     >&2 echo "Instance $instance_id has IP address $instance_ip"
 
     if [ 'web' = "$instance_type" ]; then
-      public_ip=$(dig +short staging.overviewproject.org)
+      public_ip=$(dig +short $OVERVIEW_HOSTNAME)
       >&2 aws ec2 associate-address \
         --instance-id $instance_id \
         --public-ip $public_ip \
@@ -215,7 +306,7 @@ start_instance() {
       >&2 echo "Instance $instance_id associated with public IP $public_ip"
     fi
 
-    >&2 overview-manage add-instance staging/$instance_type/$instance_ip
+    >&2 overview-manage add-instance $OVERVIEW_ENVIRONMENT/$instance_type/$instance_ip
   else
     >&2 echo "There was already a $instance_type instance"
   fi
