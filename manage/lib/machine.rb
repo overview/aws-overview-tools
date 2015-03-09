@@ -12,7 +12,7 @@ class Machine
   end
 
   def to_s
-    "#{environment}/#{type}/#{ip_address}"
+    "#{environment}/#{type.name}/#{ip_address}"
   end
 
   def start_commands; type.start_commands; end
