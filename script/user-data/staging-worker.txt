@@ -3,10 +3,11 @@ hostname: staging-worker
 repo_update: true
 repo_upgrade: all
 packages:
-  - rsyslog-relp
-  - openjdk-8-jre-headless
-  - libreoffice
   - awscli
+  - libreoffice
+  - openjdk-8-jre-headless
+  - rsyslog-relp
+  - unzip
 write_files:
   - path: /etc/rsyslog.d/39-logstash.conf
     content: |
@@ -43,24 +44,12 @@ write_files:
       MAX_MEMORY=$4 # "2500m" or "700m"
 
       aws s3 cp s3://overview-staging-secrets/worker-env.sh /tmp/$SERVER-env.sh
+      aws s3 cp s3://overview-builds/staging.zip /tmp/$SERVER-archive.zip
+      FILENAMES=$(unzip -qq -p /tmp/$SERVER-archive.zip archive/$SERVER/classpath.txt | sed -e 's/^/archive\/lib\//')
+      rm -rf /opt/overview/$SERVER
+      unzip -qq -d /opt/overview/$SERVER -j /tmp/$SERVER-archive.zip $FILENAMES
+
       source /tmp/$SERVER-env.sh
-
-      function tag_to_ip() {
-        aws ec2 describe-instances \
-          --filter "Name=tag:Name,Values=$1" \
-          --query "Reservations[*].Instances[0].PrivateIpAddress" \
-          --output text
-      }
-
-      DATABASE_SERVER_NAME=$(tag_to_ip $DATABASE_SERVER_NAME_TAG)
-      ES_HOSTS="$(tag_to_ip $ES_HOSTS_TAG):$ES_HOSTS_PORT"
-      MESSAGE_BROKER_URI="tcp://$(tag_to_ip $MESSAGE_BROKER_URI_TAG):$MESSAGE_BROKER_PORT"
-
-      aws cp s3://overview-releases/latest/archive.zip /tmp/$SERVER-archive.zip
-      FILENAMES=$(unzip -p /tmp/$SERVER-archive.zip archive/$SERVER/classpath.txt | sed -e 's/^/archive\/lib\//')
-      rm -r /opt/overview/$SERVER
-      unzip -d /opt/overview/$SERVER -j $FILENAMES
-
       exec /usr/bin/java \
         -cp "/opt/overview/$SERVER/*" \
         -Dfile.encoding=UTF8 \
@@ -75,8 +64,9 @@ users:
   - name: overview
     home: /opt/overview
 runcmd:
+  - chown overview:overview /opt/overview -R
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
   - /etc/init.d/rsyslog stop
   - /etc/init.d/rsyslog start
-  - start worker
-  - start documentset-worker
+  - start overview-worker
+  - start overview-documentset-worker

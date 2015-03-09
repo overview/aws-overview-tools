@@ -3,11 +3,12 @@ hostname: staging-web
 repo_update: true
 repo_upgrade: all
 packages:
-  - rsyslog-relp
+  - awscli
+  - haproxy
   - openjdk-8-jre-headless
   - redis-server
-  - haproxy
-  - awscli
+  - rsyslog-relp
+  - unzip
 write_files:
   - path: /etc/default/haproxy
     content: |
@@ -18,6 +19,7 @@ write_files:
         log /dev/log local0
         user haproxy
         group haproxy
+        tune.ssl.default-dh-param 2048
 
       defaults
         log global
@@ -111,25 +113,12 @@ write_files:
       #!/bin/bash
 
       aws s3 cp s3://overview-staging-secrets/frontend-env.sh /tmp/frontend-env.sh
+      aws s3 cp s3://overview-builds/staging.zip /tmp/archive.zip
+      FILENAMES=$(unzip -qq -p /tmp/archive.zip archive/frontend/classpath.txt | sed -e 's/^/archive\/lib\//')
+      rm -rf /opt/overview/frontend
+      unzip -qq -d /opt/overview/frontend -j /tmp/archive.zip $FILENAMES
+
       source /tmp/frontend-env.sh
-
-      function tag_to_ip() {
-        aws ec2 describe-instances \
-          --filter "Name=tag:Name,Values=$1" \
-          --query "Reservations[*].Instances[0].PrivateIpAddress" \
-          --output text
-      }
-
-      DATABASE_SERVER_NAME=$(tag_to_ip $DATABASE_SERVER_NAME_TAG)
-      ES_HOSTS="$(tag_to_ip $ES_HOSTS_TAG):$ES_HOSTS_PORT"
-      MESSAGE_BROKER_URI="tcp://$(tag_to_ip $MESSAGE_BROKER_URI_TAG):$MESSAGE_BROKER_PORT"
-      REDIS_HOST=$(tag_to_ip $REDIS_HOST_TAG)
-
-      aws cp s3://overview-releases/latest/archive.zip /tmp/frontend-archive.zip
-      FILENAMES=$(unzip -p /tmp/frontend-archive.zip archive/frontend/classpath.txt | sed -e 's/^/archive\/lib\//')
-      rm -r /opt/overview/frontend
-      unzip -d /opt/overview/frontend -j $FILENAMES
-
       exec /usr/bin/java \
         -cp "/opt/overview/frontend/*" \
         -DapplyEvolutions.default=true \
@@ -147,6 +136,7 @@ users:
   - name: overview
     home: /opt/overview
 runcmd:
+  - chown overview:overview /opt/overview -R
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
   - /etc/init.d/rsyslog stop
   - /etc/init.d/rsyslog start

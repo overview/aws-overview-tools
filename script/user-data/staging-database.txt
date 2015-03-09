@@ -47,7 +47,6 @@ runcmd:
   - /etc/init.d/postgresql stop
   - chown postgres:postgres /var/lib/postgresql /etc/postgresql -R
   - /etc/init.d/postgresql start
-  - sudo -u postgres psql overview -c "ALTER USER overview PASSWORD 'overview'"
   - sudo -u postgres psql overview -c "UPDATE file SET contents_location = REPLACE(contents_location, 's3:overview-production-', 's3:overview-staging-')"
   - sudo -u postgres psql overview -c "UPDATE file SET view_location = REPLACE(view_location, 's3:overview-production-', 's3:overview-staging-')"
   - sudo -u postgres psql overview -c "UPDATE page SET data_location = REPLACE(data_location, 's3:overview-production-', 's3:overview-staging-')"
