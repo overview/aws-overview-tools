@@ -52,7 +52,8 @@ write_files:
       unzip -qq -d /opt/overview/$SERVER -j /tmp/$SERVER-archive.zip $FILENAMES
 
       source /tmp/$SERVER-env.sh
-      exec /usr/bin/java \
+      # Ubuntu's LibreOffice wants Java 7. Be explicit about Java 8.
+      exec /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java \
         -cp "/opt/overview/$SERVER/*" \
         -Dfile.encoding=UTF8 \
         -Dconfig.resource=production.conf \
