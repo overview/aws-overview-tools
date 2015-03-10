@@ -2,6 +2,23 @@
 
 # Starts up an Overview environment by launching EC2 instances, attaching
 # volumes and attaching elastic IPs.
+#
+# HOW IT WORKS
+#
+# It:
+# 1. starts a database instance. On staging it uses the latest daily snapshot
+#    (It finds it by grepping descriptions.) On production it uses the volume
+#    tagged "production-database".
+#    PRODUCTION WARNING: unfortunately, you can't attach to a starting-up
+#    instance. Use the EC2 console to attach production-database to
+#    production-database as /dev/sdf while this script runs.
+# 2. starts a searchindex instance. Same story as database -- if you're
+#    starting production, use the EC2 console to attach while booting. You're
+#    on the clock here.
+# 3. starts a worker instance.
+# 4. starts a web instance.
+# 5. waits for each instance in turn to respond to SSH and then finish its
+#    startup scripts. Once that happens, the environment has been launched.
 
 fatal() {
   >&2 echo "$1"
@@ -163,9 +180,10 @@ run_production_database() {
   rm $init_file
 
   # Attach the volume. There's a race here, but we should be fine.
+  sleep 1
   aws ec2 attach-volume \
     --volume-id $volume_id \
-    --instance_id $instance_id \
+    --instance-id $instance_id \
     --device 'xvdf' \
     >/dev/null
 
@@ -203,17 +221,17 @@ run_production_searchindex() {
   # Start the instance without its volume
   instance_id=$(aws ec2 run-instances \
     --image-id $BASE_IMAGE \
-    --instance-type c4.large \
+    --instance-type m3.large \
     --placement AvailabilityZone=$AVAILABILITY_ZONE \
     --key-name manage \
     --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-searchindex \
     --security-groups $OVERVIEW_ENVIRONMENT-searchindex \
     --user-data "file://$init_file" \
-    --block-device-mappings "[{\"DeviceName\":\"/dev/sdf\",\"Ebs\":{\"SnapshotId\":\"$snapshot_id\",\"DeleteOnTermination\":true,\"VolumeType\":\"gp2\"}}]" \
     | grep 'InstanceId' | cut -d'"' -f4)
   rm $init_file
 
   # Attach the volume. There's a race here, but we should be fine.
+  sleep 1
   aws ec2 attach-volume \
     --volume-id $volume_id \
     --instance-id $instance_id \
