@@ -138,7 +138,7 @@ get_instance_id() {
 # OVERVIEW_ENVIRONMENT# and #OVERVIEW_ENVIRONMENT_ADDRESS# within it are
 # replaced with, say, "staging" and "staging.overviewproject.org".
 generate_cloud_init_file() {
-  ret=$(tempfile)
+  ret=$(mktemp -t launch-overview)
   cat "$DIR"/../cloud-init/$1.txt \
     | sed -e "s/#OVERVIEW_ENVIRONMENT#/$OVERVIEW_ENVIRONMENT/" \
     | sed -e "s/#OVERVIEW_ENVIRONMENT_ADDRESS#/$OVERVIEW_HOSTNAME/" \
