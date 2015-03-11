@@ -1,3 +1,3 @@
-We create instances with code in the `instances` directory.
+See documentation on the wiki. For instance:
 
-We manage deployment with code in the `manage` directory.
+https://github.com/overview/overview-server/wiki/Deploying-from-scratch-to-amazon
