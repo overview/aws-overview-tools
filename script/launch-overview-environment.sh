@@ -43,7 +43,7 @@ DIR="$(dirname $0)"
 OVERVIEW_ENVIRONMENT=$1
 [ "$OVERVIEW_ENVIRONMENT" = "staging" ] || [ "$OVERVIEW_ENVIRONMENT" = "production" ] || usage
 AVAILABILITY_ZONE=us-east-1a
-BASE_IMAGE=ami-f0693098 # https://cloud-images.ubuntu.com/utopic/current/ us-east-1 64-bit hvm
+BASE_IMAGE=ami-12793a7a # https://cloud-images.ubuntu.com/releases/utopic/release-20150202/ us-east-1 64-bit hvm
 
 # Global variables: OVERVIEW_ENVIRONMENT and OVERVIEW_HOSTNAME
 if [ "$OVERVIEW_ENVIRONMENT" = "staging" ]; then
