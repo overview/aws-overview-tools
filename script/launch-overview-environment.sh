@@ -253,7 +253,7 @@ run_worker() {
   init_file=$(generate_cloud_init_file worker)
   aws ec2 run-instances \
     --image-id $BASE_IMAGE \
-    --instance-type m3.medium \
+    --instance-type m3.large \
     --placement AvailabilityZone=$AVAILABILITY_ZONE \
     --key-name manage \
     --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-worker \
