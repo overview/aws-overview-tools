@@ -24,7 +24,7 @@ write_files:
       chdir /opt/overview
       console output
       respawn
-      exec /opt/overview/run-worker.sh worker JobHandler local1.notice 2500m
+      exec /opt/overview/run-worker.sh worker JobHandler local1.notice 3000m
   - path: /etc/init/overview-documentset-worker.conf
     content: |
       description "Overview document-set worker"
@@ -34,7 +34,7 @@ write_files:
       chdir /opt/overview
       console output
       respawn
-      exec /opt/overview/run-worker.sh documentset-worker org.overviewproject.DocumentSetWorker local2.notice 700m
+      exec /opt/overview/run-worker.sh documentset-worker org.overviewproject.DocumentSetWorker local2.notice 2500m
   - path: /opt/overview/run-worker.sh
     permissions: '0755'
     content: |
@@ -43,7 +43,7 @@ write_files:
       SERVER=$1 # "worker" or "documentset-worker"
       MAIN_CLASS=$2 # "JobHandler" or "org.overviewproject.DocumentSetWorker"
       SYSLOG_OUTPUT=$3 # "local1.notice" or "local2.notice"
-      MAX_MEMORY=$4 # "2500m" or "700m"
+      MAX_MEMORY=$4 # "3000m" or "2500m"
 
       aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/worker-env.sh /tmp/$SERVER-env.sh
       aws s3 cp s3://overview-builds/#OVERVIEW_ENVIRONMENT#.zip /tmp/$SERVER-archive.zip
