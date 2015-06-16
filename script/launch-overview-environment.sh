@@ -47,9 +47,9 @@ BASE_IMAGE=ami-12793a7a # https://cloud-images.ubuntu.com/releases/utopic/releas
 
 # Global variables: OVERVIEW_ENVIRONMENT and OVERVIEW_HOSTNAME
 if [ "$OVERVIEW_ENVIRONMENT" = "staging" ]; then
-  OVERVIEW_HOSTNAME=staging.overviewproject.org
+  OVERVIEW_HOSTNAME=staging.overviewdocs.com
 else
-  OVERVIEW_HOSTNAME=www.overviewproject.org
+  OVERVIEW_HOSTNAME=www.overviewdocs.com
 fi
 
 wait_for_ssh() {
