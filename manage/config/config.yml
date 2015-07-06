@@ -50,6 +50,7 @@ remote_build:
     - sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq -y dist-upgrade >/dev/null # -qq doesn't mute stuff
     - sudo apt-get -q update >/dev/null # no idea why we need this again, but we do
     - sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq -y install build-essential nodejs nodejs-dev nodejs-legacy npm openjdk-8-jdk zip ca-certificates-java >/dev/null
+    - sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
     - mkdir -p build-cache && sudo mount /dev/xvdg build-cache && ln -sf `pwd`/build-cache/.ivy2 . && ln -sf `pwd`/build-cache/.npm . && ln -sf `pwd`/build-cache/.sbt .
     - sudo umount /dev/xvde && sudo mkswap -f /dev/xvde && sudo swapon /dev/xvde
     - mkdir -p build && sudo mkfs.ext2 -q /dev/xvdf && sudo mount /dev/xvdf build && sudo chown ubuntu:ubuntu build
