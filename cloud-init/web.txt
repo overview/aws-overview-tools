@@ -120,10 +120,21 @@ write_files:
       rm -rf /opt/overview/frontend
       unzip -qq -d /opt/overview/frontend -j /tmp/archive.zip $FILENAMES
 
+      EVOLUTION_FILENAMES=$(unzip -qq -p /tmp/archive.zip archive/db-evolution-applier/classpath.txt | sed -e 's/^/archive\/lib\//')
+      rm -rf /opt/overview/db-evolution-applier
+      unzip -qq -d /opt/overview/db-evolution-applier -j /tmp/archive.zip $EVOLUTION_FILENAMES
+
       source /tmp/frontend-env.sh
+
+      DATABASE_PORT=5432 /usr/bin/java \
+        -cp "/opt/overview/db-evolution-applier/*" \
+        -Dfile.encoding=UTF8 \
+        -Duser.timezone=UTC \
+        org.overviewproject.db_evolution_applier.Main \
+        2>&1 | logger -p local1.notice
+
       exec /usr/bin/java \
         -cp "/opt/overview/frontend/*" \
-        -DapplyEvolutions.default=true \
         -Dconfig.resource=production.conf \
         -Dfile.encoding=UTF8 \
         -Dhttp.port=9000 \
@@ -131,7 +142,7 @@ write_files:
         -Dpidfile.path=/tmp/overview-web-server-useless-pid-file \
         -Duser.timezone=UTC \
         -Xmx1000m \
-        play.core.server.NettyServer /opt/overview \
+        play.core.server.ProdServerStart /opt/overview \
         2>&1 | logger -p local1.notice
 users:
   - default
