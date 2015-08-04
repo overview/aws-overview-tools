@@ -138,7 +138,7 @@ write_files:
         -cp "/opt/overview/db-evolution-applier/*" \
         -Dfile.encoding=UTF8 \
         -Duser.timezone=UTC \
-        org.overviewproject.db_evolution_applier.Main \
+        com.overviewdocs.db_evolution_applier.Main \
         2>&1 | logger -p local1.notice
 
       exec /usr/bin/java \
