@@ -9,6 +9,17 @@ packages:
   - libreoffice
   - openjdk-8-jre-headless
   - rsyslog-relp
+  - tesseract-ocr
+  - tesseract-ocr-ara
+  - tesseract-ocr-cat
+  - tesseract-ocr-deu
+  - tesseract-ocr-fra
+  - tesseract-ocr-ita
+  - tesseract-ocr-nld
+  - tesseract-ocr-por
+  - tesseract-ocr-rus
+  - tesseract-ocr-spa
+  - tesseract-ocr-swe
   - unzip
 write_files:
   - path: /etc/rsyslog.d/39-logstash.conf
