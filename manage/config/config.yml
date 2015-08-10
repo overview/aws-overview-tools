@@ -60,6 +60,6 @@ remote_build:
       - zip
       - ca-certificates-java
   init_commands:
-    - sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --autoremove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
+    - sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
     - mkdir -p build-cache && sudo mount /dev/xvdg build-cache && ln -sf `pwd`/build-cache/.ivy2 . && ln -sf `pwd`/build-cache/.npm . && ln -sf `pwd`/build-cache/.sbt .
     - mkdir -p build && sudo mkfs.ext2 -q /dev/xvdf && sudo mount /dev/xvdf build && sudo chown ubuntu:ubuntu build
