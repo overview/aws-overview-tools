@@ -45,11 +45,21 @@ remote_build:
   ami_id: ami-ee793a86 # https://cloud-images.ubuntu.com/releases/14.10/release/ - 64-bit, hvm-ssd
   cache_volume_id: vol-998c9fdb
   keypair_name: manage
+  user_data: |
+    #cloud-config
+    hostname: build
+    repo_update: true
+    repo_upgrade: all
+    packages:
+      - build-essential
+      - nodejs
+      - nodejs-dev
+      - nodejs-legacy
+      - npm
+      - openjdk-8-jdk
+      - zip
+      - ca-certificates-java
   init_commands:
-    - sudo apt-get -q update >/dev/null # -qq prevents update from working
-    - sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq -y dist-upgrade >/dev/null # -qq doesn't mute stuff
-    - sudo apt-get -q update >/dev/null # no idea why we need this again, but we do
-    - sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq -y install build-essential nodejs nodejs-dev nodejs-legacy npm openjdk-8-jdk zip ca-certificates-java >/dev/null
-    - sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
+    - sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --autoremove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
     - mkdir -p build-cache && sudo mount /dev/xvdg build-cache && ln -sf `pwd`/build-cache/.ivy2 . && ln -sf `pwd`/build-cache/.npm . && ln -sf `pwd`/build-cache/.sbt .
     - mkdir -p build && sudo mkfs.ext2 -q /dev/xvdf && sudo mount /dev/xvdf build && sudo chown ubuntu:ubuntu build

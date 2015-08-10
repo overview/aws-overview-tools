@@ -1,3 +1,4 @@
+require 'base64'
 require 'socket'
 
 require_relative 'log'
@@ -7,6 +8,7 @@ class RemoteBuilder
     :ami_id,
     :availability_zone,
     :build_init_commands,
+    :user_data,
     :cache_volume_id,
     :ec2,
     :instance_type,
@@ -22,6 +24,7 @@ class RemoteBuilder
     @security_group_id = hash[:security_group_id] || hash['security_group_id']
     @subnet_id = hash[:subnet_id] || hash['subnet_id']
     @vpc_id = hash[:vpc_id] || hash['vpc_id']
+    @user_data = hash[:user_data] || hash['user_data']
     @instance_type = hash[:instance_type] || hash['instance_type']
     @ami_id = hash[:ami_id] || hash['ami_id']
     @cache_volume_id = hash[:cache_volume_id] || hash['cache_volume_id']
@@ -57,6 +60,7 @@ class RemoteBuilder
       subnet_id: subnet_id,
       instance_type: instance_type,
       instance_initiated_shutdown_behavior: 'terminate',
+      user_data: Base64.encode64(@user_data),
       key_name: keypair_name,
       block_device_mappings: [{
         device_name: '/dev/sdf',
@@ -82,6 +86,11 @@ class RemoteBuilder
     nil while !can_connect_on_port_22?(ip_address)
 
     with_machine_shell(ip_address) do |machine_shell|
+      $log.info('remote-builder') { "Waiting for initialization to finish" }
+      while !machine_shell.exec('test /run/cloud-init/result.json')
+        sleep(1)
+      end
+
       $log.info('remote-builder') { "Setting up build environment" }
       for command in build_init_commands
         machine_shell.exec(command)
