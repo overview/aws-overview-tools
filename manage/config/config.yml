@@ -10,38 +10,38 @@ sources:
 machine_types:
   web:
     start_commands:
-      - sudo start overview-frontend
+      - sudo /opt/overview/prepare-frontend.sh
+      - sudo systemctl start overview-frontend
 
     stop_commands:
-      - sudo stop overview-frontend
+      - sudo systemctl stop overview-frontend
 
     restart_commands:
-      - sudo stop overview-frontend
-      - sleep 2
-      - sudo start overview-frontend
+      - sudo /opt/overview/prepare-frontend.sh
+      - sudo systemctl restart overview-frontend
 
   worker:
     start_commands:
-      - sudo start overview-worker
-      - sudo start overview-documentset-worker
+      - sudo /opt/overview/prepare-worker.sh documentset-worker
+      - sudo /opt/overview/prepare-worker.sh worker
+      - sudo systemctl start overview-worker overview-documentset-worker
 
     stop:
-      - sudo stop overview-worker
-      - sudo stop overview-documentset-worker
+      - sudo systemctl stop overview-worker overview-documentset-worker
 
     restart_commands:
-      - sudo stop overview-worker
-      - sudo stop overview-documentset-worker
-      - sleep 2
-      - sudo start overview-worker
-      - sudo start overview-documentset-worker
+      - sudo /opt/overview/prepare-worker.sh documentset-worker
+      - sudo /opt/overview/prepare-worker.sh worker
+      - sudo systemctl restart overview-worker overview-documentset-worker
   database: {}
   searchindex: {}
 
 remote_build:
   availability_zone: us-east-1a
   security_group: build
-  instance_type: c3.large
+  instance_type: r3.large
+  vpc_id: vpc-5c3fd138
+  subnet_id: subnet-bb9ba9cc
   ami_id: ami-ee793a86 # https://cloud-images.ubuntu.com/releases/14.10/release/ - 64-bit, hvm-ssd
   cache_volume_id: vol-998c9fdb
   keypair_name: manage
@@ -52,5 +52,4 @@ remote_build:
     - sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq -y install build-essential nodejs nodejs-dev nodejs-legacy npm openjdk-8-jdk zip ca-certificates-java >/dev/null
     - sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
     - mkdir -p build-cache && sudo mount /dev/xvdg build-cache && ln -sf `pwd`/build-cache/.ivy2 . && ln -sf `pwd`/build-cache/.npm . && ln -sf `pwd`/build-cache/.sbt .
-    - sudo umount /dev/xvde && sudo mkswap -f /dev/xvde && sudo swapon /dev/xvde
     - mkdir -p build && sudo mkfs.ext2 -q /dev/xvdf && sudo mount /dev/xvdf build && sudo chown ubuntu:ubuntu build

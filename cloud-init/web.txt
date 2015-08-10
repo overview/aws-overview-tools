@@ -107,23 +107,30 @@ write_files:
       maxmemory-samples 5
       slowlog-log-slower-than 10000
       slowlog-max-len 128
-  - path: /etc/init/overview-frontend.conf
+  - path: /etc/systemd/system/overview-frontend.conf
     content: |
-      description "Overview web server"
-      author "Overview Project"
-      setuid overview
-      setgid overview
-      chdir /opt/overview
-      console output
-      respawn
-      exec /opt/overview/run-frontend.sh
-  - path: /opt/overview/run-frontend.sh
-    permissions: '0755'
+      [Unit]
+      Description=Overview web server
+
+      [Install]
+      WantedBy=multi-user.target
+
+      [Service]
+      Restart=on-failure
+      RootDirectory=/opt/overview
+      User=overview
+      Type=simple
+      ExecStartPre=/bin/bash /opt/overview/prepare-frontend.sh
+      ExecStart=/bin/bash /opt/overview/run-frontend.sh
+  - path: /opt/overview/prepare-frontend.sh
+    permissions; '0755'
     content: |
       #!/bin/bash
 
-      aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/frontend-env.sh /tmp/frontend-env.sh
+      aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/frontend-env.sh /opt/overview/frontend-env.sh
+
       aws s3 cp s3://overview-builds/#OVERVIEW_ENVIRONMENT#.zip /tmp/archive.zip
+
       FILENAMES=$(unzip -qq -p /tmp/archive.zip archive/frontend/classpath.txt | sed -e 's/^/archive\/lib\//')
       rm -rf /opt/overview/frontend
       unzip -qq -d /opt/overview/frontend -j /tmp/archive.zip $FILENAMES
@@ -132,7 +139,13 @@ write_files:
       rm -rf /opt/overview/db-evolution-applier
       unzip -qq -d /opt/overview/db-evolution-applier -j /tmp/archive.zip $EVOLUTION_FILENAMES
 
-      source /tmp/frontend-env.sh
+      rm -f /tmp/archive.zip
+  - path: /opt/overview/run-frontend.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+
+      source /opt/overview/frontend-env.sh
 
       DATABASE_PORT=5432 /usr/bin/java \
         -cp "/opt/overview/db-evolution-applier/*" \
@@ -157,13 +170,14 @@ users:
   - name: overview
     home: /opt/overview
 runcmd:
-  - sudo /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
+  - env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
+  - /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
   - chown overview:overview /opt/overview -R
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
-  - /etc/init.d/rsyslog stop
-  - /etc/init.d/rsyslog start
-  - /etc/init.d/redis-server restart
+  - systemctl stop syslog
+  - systemctl start syslog
+  - systemctl restart redis-server
   - aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/ssl-old.pem /etc/haproxy/ssl-old.pem
   - aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/ssl.pem /etc/haproxy/ssl.pem
-  - /etc/init.d/haproxy restart
-  - start overview-frontend
+  - systemctl restart haproxy
+  - systemctl start overview-frontend

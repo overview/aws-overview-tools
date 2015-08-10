@@ -36,16 +36,50 @@ write_files:
       console output
       respawn
       exec /opt/overview/run-worker.sh worker JobHandler local1.notice 3000m
-  - path: /etc/init/overview-documentset-worker.conf
+  - path: /etc/systemd/system/overview-worker.conf
     content: |
-      description "Overview document-set worker"
-      author "Overview Project"
-      setuid overview
-      setgid overview
-      chdir /opt/overview
-      console output
-      respawn
-      exec /opt/overview/run-worker.sh documentset-worker com.overviewdocs.DocumentSetWorker local2.notice 2500m
+      [Unit]
+      Description=Overview worker
+
+      [Install]
+      WantedBy=multi-user.target
+
+      [Service]
+      Restart=on-failure
+      RootDirectory=/opt/overview
+      User=overview
+      Type=simple
+      ExecStartPre=/bin/bash /opt/overview/prepare-worker.sh documentset-worker
+      ExecStart=/bin/bash /opt/overview/run-worker.sh documentset-worker com.overviewdocs.DocumentSetWorker local2.notice 2500m
+  - path: /etc/systemd/system/overview-documentset-worker.conf
+    content: |
+      [Unit]
+      Description=Overview document-set worker
+
+      [Install]
+      WantedBy=multi-user.target
+
+      [Service]
+      Restart=on-failure
+      RootDirectory=/opt/overview
+      User=overview
+      Type=simple
+      ExecStartPre=/bin/bash /opt/overview/prepare-worker.sh worker
+      ExecStart=/bin/bash /opt/overview/run-worker.sh documentset-worker com.overviewdocs.DocumentSetWorker local2.notice 2500m
+  - path: /opt/overview/prepare-worker.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+
+      SERVER=$1 # "worker" or "documentset-worker"
+
+      aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/worker-env.sh /opt/overview/$SERVER-env.sh
+      aws s3 cp s3://overview-builds/#OVERVIEW_ENVIRONMENT#.zip /tmp/$SERVER-archive.zip
+      FILENAMES=$(unzip -qq -p /tmp/$SERVER-archive.zip archive/$SERVER/classpath.txt | sed -e 's/^/archive\/lib\//')
+      rm -rf /opt/overview/$SERVER
+      unzip -qq -d /opt/overview/$SERVER -j /tmp/$SERVER-archive.zip $FILENAMES
+
+      rm -f /tmp/$SERVER-archive.zip
   - path: /opt/overview/run-worker.sh
     permissions: '0755'
     content: |
@@ -56,15 +90,9 @@ write_files:
       SYSLOG_OUTPUT=$3 # "local1.notice" or "local2.notice"
       MAX_MEMORY=$4 # "3000m" or "2500m"
 
-      aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/worker-env.sh /tmp/$SERVER-env.sh
-      aws s3 cp s3://overview-builds/#OVERVIEW_ENVIRONMENT#.zip /tmp/$SERVER-archive.zip
-      FILENAMES=$(unzip -qq -p /tmp/$SERVER-archive.zip archive/$SERVER/classpath.txt | sed -e 's/^/archive\/lib\//')
-      rm -rf /opt/overview/$SERVER
-      unzip -qq -d /opt/overview/$SERVER -j /tmp/$SERVER-archive.zip $FILENAMES
+      source /opt/overview/$SERVER-env.sh
 
-      source /tmp/$SERVER-env.sh
-      # Ubuntu's LibreOffice wants Java 7. Be explicit about Java 8.
-      exec /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java \
+      exec /usr/bin/java \
         -cp "/opt/overview/$SERVER/*" \
         -Dfile.encoding=UTF8 \
         -Dconfig.resource=production.conf \
@@ -78,10 +106,11 @@ users:
   - name: overview
     home: /opt/overview
 runcmd:
-  - sudo /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
+  - env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
+  - /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
   - chown overview:overview /opt/overview -R
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
-  - /etc/init.d/rsyslog stop
-  - /etc/init.d/rsyslog start
-  - start overview-worker
-  - start overview-documentset-worker
+  - systemctl stop syslog
+  - systemctl start syslog
+  - systemctl start overview-worker
+  - systemctl start documentset-worker

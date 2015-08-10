@@ -11,13 +11,17 @@ class RemoteBuilder
     :ec2,
     :instance_type,
     :keypair_name,
-    :security_group
+    :security_group,
+    :subnet_id,
+    :vpc_id
   )
 
   def initialize(ec2, hash)
     @ec2 = ec2
     @availability_zone = hash[:availability_zone] || hash['availability_zone']
     @security_group = hash[:security_group] || hash['security_group']
+    @subnet_id = hash[:subnet_id] || hash['subnet_id']
+    @vpc_id = hash[:vpc_id] || hash['vpc_id']
     @instance_type = hash[:instance_type] || hash['instance_type']
     @ami_id = hash[:ami_id] || hash['ami_id']
     @cache_volume_id = hash[:cache_volume_id] || hash['cache_volume_id']
@@ -50,16 +54,13 @@ class RemoteBuilder
       image_id: ami_id,
       placement: { availability_zone: availability_zone },
       security_groups: [ security_group ],
+      subnet_id: subnet_id,
       instance_type: instance_type,
       instance_initiated_shutdown_behavior: 'terminate',
       key_name: keypair_name,
       block_device_mappings: [{
-        device_name: '/dev/sde',
-        virtual_name: 'ephemeral0'
-      },
-      {
         device_name: '/dev/sdf',
-        virtual_name: 'ephemeral1'
+        virtual_name: 'ephemeral0'
       }]
     ).data
     instance = reservation[:instances][0]

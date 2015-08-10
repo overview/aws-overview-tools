@@ -42,9 +42,9 @@ mounts:
 mount_default_fields: [ None, None, 'auto', 'defaults,nobootwait', '0', '2' ]
 runcmd:
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
-  - /etc/init.d/rsyslog stop
-  - /etc/init.d/rsyslog start
-  - /etc/init.d/postgresql stop
   - chown postgres:postgres /var/lib/postgresql /etc/postgresql -R
-  - /etc/init.d/postgresql start
+  - systemctl stop syslog || true
+  - systemctl start syslog
+  - systemctl stop postgresql || true
+  - systemctl start postgresql
   - if [ "#OVERVIEW_ENVIRONMENT#" = "staging" ]; then sudo -u postgres psql overview -c "UPDATE file SET contents_location = REPLACE(contents_location, 's3:overview-production-', 's3:overview-staging-'), view_location = REPLACE(view_location, 's3:overview-production-', 's3:overview-staging-'); UPDATE page SET data_location = REPLACE(data_location, 's3:overview-production-', 's3:overview-staging-')"; fi

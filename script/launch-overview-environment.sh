@@ -44,6 +44,9 @@ OVERVIEW_ENVIRONMENT=$1
 [ "$OVERVIEW_ENVIRONMENT" = "staging" ] || [ "$OVERVIEW_ENVIRONMENT" = "production" ] || usage
 AVAILABILITY_ZONE=us-east-1a
 BASE_IMAGE=ami-12793a7a # https://cloud-images.ubuntu.com/releases/utopic/release-20150202/ us-east-1 64-bit hvm
+VPC_ID=vpc-5c3fd138 # Name `overview`, CIDR block 10.0.0.0/16
+SUBNET_ID=subnet-bb9ba9cc # Name `overview`, VPC `overview`, zone $AVAILABILITY_ZONE, CIDR block `10.0.0.0/24`
+INTERNET_GATEWAY_ID=igw-cab1efaf # Name `overview` attached to VPC `overview`, added as 0.0.0.0/0 to subnet route table
 
 # Global variables: OVERVIEW_ENVIRONMENT and OVERVIEW_HOSTNAME
 if [ "$OVERVIEW_ENVIRONMENT" = "staging" ]; then
