@@ -57,9 +57,12 @@ remote_build:
       - nodejs-legacy
       - npm
       - openjdk-8-jdk
-      - zip
       - ca-certificates-java
+      - zip
+    runcmd:
+      - env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
+      - /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
+      - echo "127.0.1.1 $(hostname)" | tee -a /etc/hosts
   init_commands:
-    - sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
     - mkdir -p build-cache && sudo mount /dev/xvdg build-cache && ln -sf `pwd`/build-cache/.ivy2 . && ln -sf `pwd`/build-cache/.npm . && ln -sf `pwd`/build-cache/.sbt .
     - mkdir -p build && sudo mkfs.ext2 -q /dev/xvdf && sudo mount /dev/xvdf build && sudo chown ubuntu:ubuntu build
