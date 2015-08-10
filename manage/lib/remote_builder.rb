@@ -87,9 +87,7 @@ class RemoteBuilder
 
     with_machine_shell(ip_address) do |machine_shell|
       $log.info('remote-builder') { "Waiting for initialization to finish" }
-      while !machine_shell.exec('test -f /run/cloud-init/result.json')
-        sleep(1)
-      end
+      machine_shell.exec('while [ ! -e /run/cloud-init/result.json ]; do sleep 1; done')
 
       $log.info('remote-builder') { "Setting up build environment" }
       for command in build_init_commands
