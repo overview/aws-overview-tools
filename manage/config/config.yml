@@ -38,7 +38,7 @@ machine_types:
 
 remote_build:
   availability_zone: us-east-1a
-  security_group: build
+  security_group_id: sg-cb1d97ac
   instance_type: r3.large
   vpc_id: vpc-5c3fd138
   subnet_id: subnet-bb9ba9cc

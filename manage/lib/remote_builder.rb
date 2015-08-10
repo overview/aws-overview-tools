@@ -11,7 +11,7 @@ class RemoteBuilder
     :ec2,
     :instance_type,
     :keypair_name,
-    :security_group,
+    :security_group_id,
     :subnet_id,
     :vpc_id
   )
@@ -19,7 +19,7 @@ class RemoteBuilder
   def initialize(ec2, hash)
     @ec2 = ec2
     @availability_zone = hash[:availability_zone] || hash['availability_zone']
-    @security_group = hash[:security_group] || hash['security_group']
+    @security_group_id = hash[:security_group_id] || hash['security_group_id']
     @subnet_id = hash[:subnet_id] || hash['subnet_id']
     @vpc_id = hash[:vpc_id] || hash['vpc_id']
     @instance_type = hash[:instance_type] || hash['instance_type']
@@ -53,7 +53,7 @@ class RemoteBuilder
       max_count: 1,
       image_id: ami_id,
       placement: { availability_zone: availability_zone },
-      security_groups: [ security_group ],
+      security_group_ids: [ security_group_id ],
       subnet_id: subnet_id,
       instance_type: instance_type,
       instance_initiated_shutdown_behavior: 'terminate',
