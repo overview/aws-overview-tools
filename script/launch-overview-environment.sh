@@ -41,11 +41,11 @@ type -p ssh >/dev/null || fatal 'You need the `ssh` command in your $PATH'
 
 DIR="$(dirname $0)"
 OVERVIEW_ENVIRONMENT=$1
-[ "$OVERVIEW_ENVIRONMENT" = "staging" ] || [ "$OVERVIEW_ENVIRONMENT" = "production" ] || usage
+[ "$OVERVIEW_ENVIRONMENT" = "staging" ] || [ "$OVERVIEW_ENVIRONMENT" = "production" ] || [ "$OVERVIEW_ENVIRONMENT" = "logstash" ] || usage
 AVAILABILITY_ZONE=us-east-1a
-BASE_IMAGE=ami-12793a7a # https://cloud-images.ubuntu.com/releases/utopic/release-20150202/ us-east-1 64-bit hvm
+BASE_IMAGE=ami-7b6cb610 # https://cloud-images.ubuntu.com/releases/vivid/release/ us-east-1 64-bit hvm
 VPC_ID=vpc-5c3fd138 # Name `overview`, CIDR block 10.0.0.0/16
-SUBNET_ID=subnet-bb9ba9cc # Name `overview`, VPC `overview`, zone $AVAILABILITY_ZONE, CIDR block `10.0.0.0/24`
+SUBNET_ID=subnet-1e134747 # Name `overview`, VPC `overview`, zone $AVAILABILITY_ZONE, CIDR block `10.0.0.0/24`, auto-assign public IPs
 INTERNET_GATEWAY_ID=igw-cab1efaf # Name `overview` attached to VPC `overview`, added as 0.0.0.0/0 to subnet route table
 
 # Global variables: OVERVIEW_ENVIRONMENT and OVERVIEW_HOSTNAME
@@ -92,8 +92,8 @@ get_instance_ip() {
 get_volume_id() {
   aws ec2 describe-volumes \
     --filters "Name=tag:Name,Values=$1" \
-    --output text \
-    --query 'Volumes[*].VolumeId'
+    --query 'Volumes[*].VolumeId' \
+    --output text
 }
 
 wait_for_instance_ip() {
@@ -126,9 +126,28 @@ get_searchindex_snapshot_id() {
 get_instance_id() {
   aws ec2 describe-instances \
     --filters \
-      "Name=instance.group-name,Values=$OVERVIEW_ENVIRONMENT-$1" \
-      "Name=instance-state-name,Values=pending,running" \
+      Name=vpc-id,Values=$VPC_ID \
+      Name=instance.group-name,Values=$OVERVIEW_ENVIRONMENT-$1 \
+      Name=instance-state-name,Values=pending,running \
     --query 'Reservations[*].Instances[*].InstanceId' \
+    --output text
+}
+
+get_logstash_ip() {
+  aws ec2 describe-instances \
+    --filters \
+      Name=tag:Name,Values=logstash \
+      Name=vpc-id,Values=$VPC_ID \
+    --query 'Reservations[*].Instances[*].PrivateIpAddress' \
+    --output text
+}
+
+get_security_group_id() {
+  aws ec2 describe-security-groups \
+    --filters \
+      Name=group-name,Values=$1 \
+      Name=vpc-id,Values=$VPC_ID \
+    --query 'SecurityGroups[*].GroupId' \
     --output text
 }
 
@@ -141,8 +160,14 @@ get_instance_id() {
 # OVERVIEW_ENVIRONMENT# and #OVERVIEW_ENVIRONMENT_ADDRESS# within it are
 # replaced with, say, "staging" and "staging.overviewproject.org".
 generate_cloud_init_file() {
+  logstash_ip=$(get_logstash_ip)
+  if [ "$1" != 'logstash' -a -z "$logstash_ip" ]; then
+    fatal "There's no logstash server, so you can't start any others. Launch the logstash environment first."
+  fi
+
   ret=$(mktemp launch-overview-XXXXXX)
   cat "$DIR"/../cloud-init/$1.txt \
+    | sed -e "s/#LOGSTASH_IP#/$LOGSTASH_IP/" \
     | sed -e "s/#OVERVIEW_ENVIRONMENT#/$OVERVIEW_ENVIRONMENT/" \
     | sed -e "s/#OVERVIEW_ENVIRONMENT_ADDRESS#/$OVERVIEW_HOSTNAME/" \
     > "$ret"
@@ -150,37 +175,43 @@ generate_cloud_init_file() {
   echo $ret
 }
 
-run_staging_database() {
-  init_file=$(generate_cloud_init_file database)
-  snapshot_id=$(get_database_snapshot_id)
+ec2_run_instances() {
+  instance_type=$1
+  shift
+  name=$1
+  shift
+  init_name=$1
+  shift
+
+  security_group_id=$(get_security_group_id $name)
+  init_file=$(generate_cloud_init_file $init_name)
+
   aws ec2 run-instances \
     --image-id $BASE_IMAGE \
-    --instance-type m3.large \
     --placement AvailabilityZone=$AVAILABILITY_ZONE \
+    --subnet-id $SUBNET_ID \
     --key-name manage \
-    --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-database \
-    --security-groups $OVERVIEW_ENVIRONMENT-database \
+    --instance-type $instance_type \
+    --iam-instance-profile Name=$name \
+    --security-group-ids $security_group_id \
     --user-data "file://$init_file" \
-    --block-device-mappings "[{\"DeviceName\":\"/dev/sdf\",\"Ebs\":{\"SnapshotId\":\"$snapshot_id\",\"DeleteOnTermination\":true,\"VolumeType\":\"gp2\"}}]" \
+    "$@" \
     | grep 'InstanceId' | cut -d'"' -f4
   rm $init_file
 }
 
+run_staging_database() {
+  snapshot_id=$(get_database_snapshot_id)
+
+  ec2_run_instances t2.large staging-database database \
+    --block-device-mappings "[{\"DeviceName\":\"/dev/sdf\",\"Ebs\":{\"SnapshotId\":\"$snapshot_id\",\"DeleteOnTermination\":true,\"VolumeType\":\"gp2\"}}]"
+}
+
 run_production_database() {
-  init_file=$(generate_cloud_init_file database)
   volume_id=$(get_volume_id 'production-database')
 
   # Start the instance without its volume.
-  instance_id=$(aws ec2 run-instances \
-    --image-id $BASE_IMAGE \
-    --instance-type m3.large \
-    --placement AvailabilityZone=$AVAILABILITY_ZONE \
-    --key-name manage \
-    --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-database \
-    --security-groups $OVERVIEW_ENVIRONMENT-database \
-    --user-data "file://$init_file" \
-    | grep 'InstanceId' | cut -d'"' -f4)
-  rm $init_file
+  instance_id=$(ec2_run_instances t2.large production-database database)
 
   # Attach the volume. There's a race here, but we should be fine.
   sleep 1
@@ -202,36 +233,17 @@ run_database() {
 }
 
 run_staging_searchindex() {
-  init_file=$(generate_cloud_init_file searchindex)
   snapshot_id=$(get_searchindex_snapshot_id)
-  aws ec2 run-instances \
-    --image-id $BASE_IMAGE \
-    --instance-type m3.large \
-    --placement AvailabilityZone=$AVAILABILITY_ZONE \
-    --key-name manage \
-    --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-searchindex \
-    --security-groups $OVERVIEW_ENVIRONMENT-searchindex \
-    --user-data "file://$init_file" \
-    --block-device-mappings "[{\"DeviceName\":\"/dev/sdf\",\"Ebs\":{\"SnapshotId\":\"$snapshot_id\",\"DeleteOnTermination\":true,\"VolumeType\":\"gp2\"}}]" \
-    | grep 'InstanceId' | cut -d'"' -f4
-  rm $init_file
+
+  ec2_run_instances t2.large staging-searchindex searchindex \
+    --block-device-mappings "[{\"DeviceName\":\"/dev/sdf\",\"Ebs\":{\"SnapshotId\":\"$snapshot_id\",\"DeleteOnTermination\":true,\"VolumeType\":\"gp2\"}}]"
 }
 
 run_production_searchindex() {
-  init_file=$(generate_cloud_init_file searchindex)
   volume_id=$(get_volume_id "production-searchindex")
 
   # Start the instance without its volume
-  instance_id=$(aws ec2 run-instances \
-    --image-id $BASE_IMAGE \
-    --instance-type m3.large \
-    --placement AvailabilityZone=$AVAILABILITY_ZONE \
-    --key-name manage \
-    --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-searchindex \
-    --security-groups $OVERVIEW_ENVIRONMENT-searchindex \
-    --user-data "file://$init_file" \
-    | grep 'InstanceId' | cut -d'"' -f4)
-  rm $init_file
+  instance_id=$(ec2_run_instances t2.large production-searchindex searchindex)
 
   # Attach the volume. There's a race here, but we should be fine.
   sleep 1
@@ -253,31 +265,15 @@ run_searchindex() {
 }
 
 run_worker() {
-  init_file=$(generate_cloud_init_file worker)
-  aws ec2 run-instances \
-    --image-id $BASE_IMAGE \
-    --instance-type m3.large \
-    --placement AvailabilityZone=$AVAILABILITY_ZONE \
-    --key-name manage \
-    --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-worker \
-    --security-groups $OVERVIEW_ENVIRONMENT-worker \
-    --user-data "file://$init_file" \
-    | grep 'InstanceId' | cut -d'"' -f4
-  rm $init_file
+  ec2_run_instances t2.large $OVERVIEW_ENVIRONMENT-worker worker
 }
 
 run_web() {
-  init_file=$(generate_cloud_init_file web)
-  aws ec2 run-instances \
-    --image-id $BASE_IMAGE \
-    --instance-type m3.medium \
-    --placement AvailabilityZone=$AVAILABILITY_ZONE \
-    --key-name manage \
-    --iam-instance-profile Name=$OVERVIEW_ENVIRONMENT-web \
-    --security-groups $OVERVIEW_ENVIRONMENT-web \
-    --user-data "file://$init_file" \
-    | grep 'InstanceId' | cut -d'"' -f4
-  rm $init_file
+  ec2_run_instances t2.medium $OVERVIEW_ENVIRONMENT-web web
+}
+
+run_logstash() {
+  ec2_run_instances t2.medium logstash logstash
 }
 
 # Returns an instance ID
@@ -334,19 +330,39 @@ start_instance() {
   echo $instance_id
 }
 
-instance_types=(database searchindex worker web)
-instance_ids=()
-for instance_type in ${instance_types[@]}; do
-  >&2 echo "Ensuring $instance_type is launched..."
-  instance_id=$(start_instance $instance_type)
-  instance_ids+=($instance_id)
-done
+if [ "$OVERVIEW_ENVIRONMENT" = 'logstash' ]; then
+  >&2 echo "Ensuring logstash is launched..."
+  instance_id=$(run_logstash)
+  aws ec2 create-tags \
+    --resources $instance_id \
+    --tags \
+      "Key=Name,Value=logstash" \
+      "Key=Environment,Value=production" \
+      >/dev/null
+  >&2 echo "Launched logstash instance $instance_id"
 
-for instance_id in ${instance_ids[@]}; do
-  >&2 echo "Ensuring $instance_id is finished initializing..."
   instance_ip=$(wait_for_instance_ip $instance_id)
+  >&2 echo "Instance $instance_id has IP address $instance_ip"
+
+  >&2 overview-manage add-instance logstash/logstash/$instance_ip
+
   wait_for_ssh $instance_ip
   wait_for_cloud_init $instance_ip
-done
+else
+  instance_types=(database searchindex worker web)
+  instance_ids=()
+  for instance_type in ${instance_types[@]}; do
+    >&2 echo "Ensuring $instance_type is launched..."
+    instance_id=$(start_instance $instance_type)
+    instance_ids+=($instance_id)
+  done
+
+  for instance_id in ${instance_ids[@]}; do
+    >&2 echo "Ensuring $instance_id is finished initializing..."
+    instance_ip=$(wait_for_instance_ip $instance_id)
+    wait_for_ssh $instance_ip
+    wait_for_cloud_init $instance_ip
+  done
+fi
 
 >&2 echo "Up and running"

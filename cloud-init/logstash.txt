@@ -1,0 +1,180 @@
+#cloud-config
+hostname: logstash
+repo_update: true
+repo_upgrade: all
+apt_sources:
+  - source: "deb http://packages.elasticsearch.org/elasticsearch/1.7/debian stable main"
+    key: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: SKS 1.1.5
+      Comment: Hostname: pgp.mit.edu
+
+      mQENBFI3HsoBCADXDtbNJnxbPqB1vDNtCsqhe49vFYsZN9IOZsZXgp7aHjh6CJBDA+bGFOwy
+      hbd7at35jQjWAw1O3cfYsKAmFy+Ar3LHCMkV3oZspJACTIgCrwnkic/9CUliQe324qvObU2Q
+      RtP4Fl0zWcfb/S8UYzWXWIFuJqMvE9MaRY1bwUBvzoqavLGZj3SF1SPO+TB5QrHkrQHBsmX+
+      Jda6d4Ylt8/t6CvMwgQNlrlzIO9WT+YN6zS+sqHd1YK/aY5qhoLNhp9G/HxhcSVCkLq8SStj
+      1ZZ1S9juBPoXV1ZWNbxFNGwOh/NYGldD2kmBf3YgCqeLzHahsAEpvAm8TBa7Q9W21C8vABEB
+      AAG0RUVsYXN0aWNzZWFyY2ggKEVsYXN0aWNzZWFyY2ggU2lnbmluZyBLZXkpIDxkZXZfb3Bz
+      QGVsYXN0aWNzZWFyY2gub3JnPokBOAQTAQIAIgUCUjceygIbAwYLCQgHAwIGFQgCCQoLBBYC
+      AwECHgECF4AACgkQ0n1mbNiOQrRzjAgAlTUQ1mgo3nK6BGXbj4XAJvuZDG0HILiUt+pPnz75
+      nsf0NWhqR4yGFlmpuctgCmTD+HzYtV9fp9qW/bwVuJCNtKXk3sdzYABY+Yl0Cez/7C2GuGCO
+      lbn0luCNT9BxJnh4mC9h/cKI3y5jvZ7wavwe41teqG14V+EoFSn3NPKmTxcDTFrV7SmVPxCB
+      cQze00cJhprKxkuZMPPVqpBS+JfDQtzUQD/LSFfhHj9eD+Xe8d7sw+XvxB2aN4gnTlRzjL1n
+      TRp0h2/IOGkqYfIG9rWmSLNlxhB2t+c0RsjdGM4/eRlPWylFbVMc5pmDpItrkWSnzBfkmXL3
+      vO2X3WvwmSFiQbkBDQRSNx7KAQgA5JUlzcMW5/cuyZR8alSacKqhSbvoSqqbzHKcUQZmlzNM
+      KGTABFG1yRx9r+wa/fvqP6OTRzRDvVS/cycws8YX7Ddum7x8uI95b9ye1/Xy5noPEm8cD+hp
+      lnpU+PBQZJ5XJ2I+1l9Nixx47wPGXeClLqcdn0ayd+v+Rwf3/XUJrvccG2YZUiQ4jWZkoxsA
+      07xx7Bj+Lt8/FKG7sHRFvePFU0ZS6JFx9GJqjSBbHRRkam+4emW3uWgVfZxuwcUCn1ayNgRt
+      KiFv9jQrg2TIWEvzYx9tywTCxc+FFMWAlbCzi+m4WD+QUWWfDQ009U/WM0ks0KwwEwSk/UDu
+      ToxGnKU2dQARAQABiQEfBBgBAgAJBQJSNx7KAhsMAAoJENJ9ZmzYjkK0c3MIAIE9hAR20mqJ
+      WLcsxLtrRs6uNF1VrpB+4n/55QU7oxA1iVBO6IFu4qgsF12JTavnJ5MLaETlggXY+zDef9sy
+      TPXoQctpzcaNVDmedwo1SiL03uMoblOvWpMR/Y0j6rm7IgrMWUDXDPvoPGjMl2q1iTeyHkMZ
+      EyUJ8SKsaHh4jV9wp9KmC8C+9CwMukL7vM5w8cgvJoAwsp3Fn59AxWthN3XJYcnMfStkIuWg
+      R7U2r+a210W6vnUxU4oN0PmMcursYPyeV0NX/KQeUeNMwGTFB6QHS/anRaGQewijkrYYoTNt
+      fllxIu9XYmiBERQ/qPDlGRlOgVTd9xUfHFkzB52c70E=
+      =92oX
+      -----END PGP PUBLIC KEY BLOCK-----
+  - source: "deb http://packages.elasticsearch.org/logstash/1.5/debian stable main"
+    key: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: SKS 1.1.5
+      Comment: Hostname: pgp.mit.edu
+
+      mQENBFI3HsoBCADXDtbNJnxbPqB1vDNtCsqhe49vFYsZN9IOZsZXgp7aHjh6CJBDA+bGFOwy
+      hbd7at35jQjWAw1O3cfYsKAmFy+Ar3LHCMkV3oZspJACTIgCrwnkic/9CUliQe324qvObU2Q
+      RtP4Fl0zWcfb/S8UYzWXWIFuJqMvE9MaRY1bwUBvzoqavLGZj3SF1SPO+TB5QrHkrQHBsmX+
+      Jda6d4Ylt8/t6CvMwgQNlrlzIO9WT+YN6zS+sqHd1YK/aY5qhoLNhp9G/HxhcSVCkLq8SStj
+      1ZZ1S9juBPoXV1ZWNbxFNGwOh/NYGldD2kmBf3YgCqeLzHahsAEpvAm8TBa7Q9W21C8vABEB
+      AAG0RUVsYXN0aWNzZWFyY2ggKEVsYXN0aWNzZWFyY2ggU2lnbmluZyBLZXkpIDxkZXZfb3Bz
+      QGVsYXN0aWNzZWFyY2gub3JnPokBOAQTAQIAIgUCUjceygIbAwYLCQgHAwIGFQgCCQoLBBYC
+      AwECHgECF4AACgkQ0n1mbNiOQrRzjAgAlTUQ1mgo3nK6BGXbj4XAJvuZDG0HILiUt+pPnz75
+      nsf0NWhqR4yGFlmpuctgCmTD+HzYtV9fp9qW/bwVuJCNtKXk3sdzYABY+Yl0Cez/7C2GuGCO
+      lbn0luCNT9BxJnh4mC9h/cKI3y5jvZ7wavwe41teqG14V+EoFSn3NPKmTxcDTFrV7SmVPxCB
+      cQze00cJhprKxkuZMPPVqpBS+JfDQtzUQD/LSFfhHj9eD+Xe8d7sw+XvxB2aN4gnTlRzjL1n
+      TRp0h2/IOGkqYfIG9rWmSLNlxhB2t+c0RsjdGM4/eRlPWylFbVMc5pmDpItrkWSnzBfkmXL3
+      vO2X3WvwmSFiQbkBDQRSNx7KAQgA5JUlzcMW5/cuyZR8alSacKqhSbvoSqqbzHKcUQZmlzNM
+      KGTABFG1yRx9r+wa/fvqP6OTRzRDvVS/cycws8YX7Ddum7x8uI95b9ye1/Xy5noPEm8cD+hp
+      lnpU+PBQZJ5XJ2I+1l9Nixx47wPGXeClLqcdn0ayd+v+Rwf3/XUJrvccG2YZUiQ4jWZkoxsA
+      07xx7Bj+Lt8/FKG7sHRFvePFU0ZS6JFx9GJqjSBbHRRkam+4emW3uWgVfZxuwcUCn1ayNgRt
+      KiFv9jQrg2TIWEvzYx9tywTCxc+FFMWAlbCzi+m4WD+QUWWfDQ009U/WM0ks0KwwEwSk/UDu
+      ToxGnKU2dQARAQABiQEfBBgBAgAJBQJSNx7KAhsMAAoJENJ9ZmzYjkK0c3MIAIE9hAR20mqJ
+      WLcsxLtrRs6uNF1VrpB+4n/55QU7oxA1iVBO6IFu4qgsF12JTavnJ5MLaETlggXY+zDef9sy
+      TPXoQctpzcaNVDmedwo1SiL03uMoblOvWpMR/Y0j6rm7IgrMWUDXDPvoPGjMl2q1iTeyHkMZ
+      EyUJ8SKsaHh4jV9wp9KmC8C+9CwMukL7vM5w8cgvJoAwsp3Fn59AxWthN3XJYcnMfStkIuWg
+      R7U2r+a210W6vnUxU4oN0PmMcursYPyeV0NX/KQeUeNMwGTFB6QHS/anRaGQewijkrYYoTNt
+      fllxIu9XYmiBERQ/qPDlGRlOgVTd9xUfHFkzB52c70E=
+      =92oX
+      -----END PGP PUBLIC KEY BLOCK-----
+packages:
+  - rsyslog-relp
+  - openjdk-8-jre-headless
+  - elasticsearch
+  - logstash
+write_files:
+  - path: /etc/rsyslog.d/39-logstash.conf
+    content: |
+      $ModLoad omrelp
+      *.* :omrelp:127.0.0.1:2514
+  - path: /etc/default/elasticsearch
+    content: |
+      ES_HEAP_SIZE=1800m
+      MAX_LOCKED_MEMORY=unlimited
+      CONF_DIR=/etc/elasticsearch
+      DATA_DIR=/var/lib/elasticsearch/data
+  - path: /etc/systemd/system/kibana.service
+    content: |
+      [Service]
+      ExecStart=/opt/kibana-4.1.1-linux-x64/bin/kibana
+      Restart=on-failure
+      User=ubuntu
+      Group=ubuntu
+  - path: /etc/logstash/patterns/worker
+    content: |
+      WORKER_BASE %{LOGLEVEL:level} \s*%{NOTSPACE:class} -
+
+      WORKER_FILE_CONVERSION %{WORKER_BASE} Converting %{GREEDYDATA:filename} \(%{UUID:uuid}, %{INT:size:int}kb\) to PDF, time: %{INT:duration:int}ms
+
+      WORKER_DOCSET_CREATION %{WORKER_BASE} Created DocumentSet %{INT:documentSetId}. cluster %{INT:clusterDuration:int}ms; total %{INT:totalDuration:int}ms
+  - path: /etc/logstash/conf.d/input.conf
+    content: |
+      input {
+        relp {
+          codec => plain
+          port => 2514
+          type => relp
+        }
+      }
+  - path: /etc/logstash/conf.d/filter.conf
+    content: |
+      filter {
+        if [type] == "relp" {
+          # Remove syslog stuff right away
+          grok {
+            patterns_dir => "/etc/logstash/patterns"
+            match => [ "message", "%{SYSLOGLINE}" ]
+            add_tag => "syslog"
+            overwrite => [ "message" ]
+          }
+
+          # Now, parse for specific message types
+
+          # haproxy
+          grok {
+            patterns_dir => "/etc/logstash/patterns"
+            match => [ "message", "%{HAPROXYHTTP}" ]
+            add_tag => [ "haproxy" ]
+          }
+
+          # File conversion
+          grok {
+            patterns_dir => "/etc/logstash/patterns"
+            match => [ "message", "%{WORKER_FILE_CONVERSION}" ]
+            add_tag => [ "worker", "file-conversion" ]
+          }
+
+          # Docset creation
+          grok {
+            patterns_dir => "/etc/logstash/patterns"
+            match => [ "message", "%{WORKER_DOCSET_CREATION}" ]
+            add_tag => [ "worker", "docset-creation" ]
+          }
+
+          # Stack traces (TODO make this work, multiline-style)
+          grok {
+            patterns_dir => "/etc/logstash/patterns"
+            match => [ "message", "%{JAVASTACKTRACEPART}" ]
+            add_tag => "java-exception"
+          }
+
+          # Postgres (TODO make this do something useful?)
+          grok {
+            patterns_dir => "/etc/logstash/patterns"
+            match => [ "message", "%{SYSLOGBASE} %{POSTGRESQL}" ]
+            add_tag => "postgresql"
+          }
+        }
+      }
+  - path: /etc/logstash/conf.d/output.conf
+    content: |
+      output {
+        elasticsearch { host => localhost }
+      }
+mounts:
+  - [ xvdf, /var/lib/elasticsearch ]
+mount_default_fields: [ None, None, 'auto', 'defaults,nobootwait', '0', '2' ]
+runcmd:
+  - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
+  - env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
+  - /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
+  - chown -R elasticsearch:elasticsearch /var/lib/elasticsearch
+  - /opt/logstash/bin/plugin install logstash-input-relp
+  - systemctl stop syslog || true
+  - systemctl start syslog
+  - systemctl stop elasticsearch || true
+  - systemctl start elasticsearch
+  - systemctl stop logstash || true
+  - systemctl start logstash
+  - curl https://download.elastic.co/kibana/kibana/kibana-4.1.1-linux-x64.tar.gz -o /tmp/kibana-4.1.1-linux-x64.tar.gz
+  - cd /opt && tar zxf /tmp/kibana-4.1.1-linux-x64.tar.gz # Install Kibana
+  - iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 5601 # Put Kibana on port 80
+  - systemctl start kibana

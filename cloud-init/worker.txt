@@ -25,7 +25,7 @@ write_files:
   - path: /etc/rsyslog.d/39-logstash.conf
     content: |
       $ModLoad omrelp
-      *.* :omrelp:10.79.180.239:2514
+      *.* :omrelp:#LOGSTASH_IP#:2514
   - path: /etc/init/overview-worker.conf
     content: |
       description "Overview worker"
