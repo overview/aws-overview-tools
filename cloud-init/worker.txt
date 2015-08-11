@@ -26,46 +26,26 @@ write_files:
     content: |
       $ModLoad omrelp
       *.* :omrelp:#LOGSTASH_IP#:2514
-  - path: /etc/init/overview-worker.conf
-    content: |
-      description "Overview worker"
-      author "Overview Project"
-      setuid overview
-      setgid overview
-      chdir /opt/overview
-      console output
-      respawn
-      exec /opt/overview/run-worker.sh worker JobHandler local1.notice 3000m
-  - path: /etc/systemd/system/overview-worker.conf
+  - path: /etc/systemd/system/overview-worker.service
     content: |
       [Unit]
       Description=Overview worker
 
-      [Install]
-      WantedBy=multi-user.target
-
       [Service]
       Restart=on-failure
-      RootDirectory=/opt/overview
+      WorkingDirectory=/opt/overview
       User=overview
-      Type=simple
-      ExecStartPre=/bin/bash /opt/overview/prepare-worker.sh documentset-worker
-      ExecStart=/bin/bash /opt/overview/run-worker.sh documentset-worker com.overviewdocs.DocumentSetWorker local2.notice 2500m
-  - path: /etc/systemd/system/overview-documentset-worker.conf
+      ExecStart=/opt/overview/run-worker.sh worker JobHandler local1.notice 3000m
+  - path: /etc/systemd/system/overview-documentset-worker.service
     content: |
       [Unit]
       Description=Overview document-set worker
 
-      [Install]
-      WantedBy=multi-user.target
-
       [Service]
       Restart=on-failure
-      RootDirectory=/opt/overview
+      WorkingDirectory=/opt/overview
       User=overview
-      Type=simple
-      ExecStartPre=/bin/bash /opt/overview/prepare-worker.sh worker
-      ExecStart=/bin/bash /opt/overview/run-worker.sh documentset-worker com.overviewdocs.DocumentSetWorker local2.notice 2500m
+      ExecStart=/opt/overview/run-worker.sh documentset-worker com.overviewdocs.DocumentSetWorker local2.notice 2500m
   - path: /opt/overview/prepare-worker.sh
     permissions: '0755'
     content: |
@@ -108,9 +88,11 @@ users:
 runcmd:
   - env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
   - /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
+  - /opt/overview/prepare-worker.sh documentset-worker
+  - /opt/overview/prepare-worker.sh worker
   - chown overview:overview /opt/overview -R
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
-  - systemctl stop syslog
+  - systemctl stop syslog || true
   - systemctl start syslog
   - systemctl start overview-worker
-  - systemctl start documentset-worker
+  - systemctl start overview-documentset-worker

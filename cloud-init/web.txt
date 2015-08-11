@@ -12,10 +12,7 @@ packages:
   - rsyslog-relp
   - unzip
 write_files:
-  - path: /etc/default/haproxy
-    content: |
-      ENABLED=1
-  - path: /etc/haproxy/haproxy.cfg
+  - path: /etc/haproxy/haproxy.cfg.overview # if we write haproxy.cfg, dpkg fails to install haproxy (no SSL certs yet)
     content: |
       global
         log /dev/log local0
@@ -107,23 +104,19 @@ write_files:
       maxmemory-samples 5
       slowlog-log-slower-than 10000
       slowlog-max-len 128
-  - path: /etc/systemd/system/overview-frontend.conf
+  - path: /etc/systemd/system/overview-frontend.service
     content: |
       [Unit]
       Description=Overview web server
 
-      [Install]
-      WantedBy=multi-user.target
-
       [Service]
       Restart=on-failure
-      RootDirectory=/opt/overview
+      WorkingDirectory=/opt/overview
       User=overview
       Type=simple
-      ExecStartPre=/bin/bash /opt/overview/prepare-frontend.sh
-      ExecStart=/bin/bash /opt/overview/run-frontend.sh
+      ExecStart=/opt/overview/run-frontend.sh
   - path: /opt/overview/prepare-frontend.sh
-    permissions; '0755'
+    permissions: '0755'
     content: |
       #!/bin/bash
 
@@ -168,16 +161,19 @@ write_files:
 users:
   - default
   - name: overview
-    home: /opt/overview
+    homedir: /opt/overview
 runcmd:
+  - echo "127.0.1.1 $(hostname)" | tee -a /etc/hosts
   - env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
   - /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
+  - /opt/overview/prepare-frontend.sh
   - chown overview:overview /opt/overview -R
-  - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
-  - systemctl stop syslog
+  - systemctl stop syslog || true
   - systemctl start syslog
   - systemctl restart redis-server
   - aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/ssl-old.pem /etc/haproxy/ssl-old.pem
   - aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/ssl.pem /etc/haproxy/ssl.pem
-  - systemctl restart haproxy
+  - systemctl stop haproxy || true
+  - mv /etc/haproxy/haproxy.cfg.overview /etc/haproxy/haproxy.cfg
+  - systemctl start haproxy
   - systemctl start overview-frontend

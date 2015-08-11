@@ -151,6 +151,13 @@ get_security_group_id() {
     --output text
 }
 
+get_ip_allocation_id() {
+  aws ec2 describe-addresses \
+    --filter Name=public-ip,Values=$1 \
+    --query 'Addresses[*].AllocationId' \
+    --output text
+}
+
 # Creates a temporary file that holds a cloud-init config.
 #
 # Arguments:
@@ -167,7 +174,7 @@ generate_cloud_init_file() {
 
   ret=$(mktemp launch-overview-XXXXXX)
   cat "$DIR"/../cloud-init/$1.txt \
-    | sed -e "s/#LOGSTASH_IP#/$LOGSTASH_IP/" \
+    | sed -e "s/#LOGSTASH_IP#/$logstash_ip/" \
     | sed -e "s/#OVERVIEW_ENVIRONMENT#/$OVERVIEW_ENVIRONMENT/" \
     | sed -e "s/#OVERVIEW_ENVIRONMENT_ADDRESS#/$OVERVIEW_HOSTNAME/" \
     > "$ret"
@@ -314,15 +321,6 @@ start_instance() {
     instance_ip=$(wait_for_instance_ip $instance_id)
     >&2 echo "Instance $instance_id has IP address $instance_ip"
 
-    if [ 'web' = "$instance_type" ]; then
-      public_ip=$(dig +short $OVERVIEW_HOSTNAME)
-      >&2 aws ec2 associate-address \
-        --instance-id $instance_id \
-        --public-ip $public_ip \
-        >/dev/null
-      >&2 echo "Instance $instance_id associated with public IP $public_ip"
-    fi
-
     >&2 overview-manage add-instance $OVERVIEW_ENVIRONMENT/$instance_type/$instance_ip
   else
     >&2 echo "There was already a $instance_type instance"
@@ -363,6 +361,17 @@ else
     wait_for_ssh $instance_ip
     wait_for_cloud_init $instance_ip
   done
+
+  public_ip=$(dig +short $OVERVIEW_HOSTNAME)
+  allocation_id=$(get_ip_allocation_id $public_ip)
+  >&2 aws ec2 disassociate-address \
+    --association-id $allocation_id \
+    >/dev/null 2>&1 # usually, the association doesn't exist
+  >&2 aws ec2 associate-address \
+    --instance-id $instance_id \
+    --allocation-id $allocation_id \
+    >/dev/null
+  >&2 echo "Instance $instance_id associated with public IP $public_ip"
 fi
 
 >&2 echo "Up and running"

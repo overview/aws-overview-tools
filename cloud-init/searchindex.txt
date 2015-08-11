@@ -73,28 +73,6 @@ write_files:
       bootstrap.mlockall: true
       cluster.name: overview-search-index
       discovery.zen.ping.multicast.enabled: false
-  - path: /etc/elasticsearch/logging.yml
-    content: |
-      es.logger.level: INFO
-      rootLogger: INFO, syslog
-      logger:
-        action: INFO
-        gateway: INFO
-        index.gateway: INFO
-        indices.recovery: INFO
-        discovery: INFO
-        index.search.slowlog: DEBUG
-        index.indexing.slowlog: DEBUG
-      additivity:
-        index.search.slowlog=false
-        index.indexing.slowlog=false
-      appender:
-        syslog:
-          type: syslog
-          facility: local0
-          layout:
-            type: pattern
-            conversionPattern: "[%-5p][%-25c] %m%n"
 mounts:
   - [ xvdf, /var/lib/elasticsearch ]
 mount_default_fields: [ None, None, 'auto', 'defaults,nobootwait', '0', '2' ]
