@@ -153,7 +153,7 @@ write_files:
         -Dfile.encoding=UTF8 \
         -Dhttp.port=9000 \
         -Dlogback.configurationFile=productionlog.xml \
-        -Dpidfile.path=/tmp/overview-web-server-useless-pid-file \
+        -Dpidfile.path=/dev/null \
         -Duser.timezone=UTC \
         -Xmx1000m \
         play.core.server.ProdServerStart /opt/overview \
