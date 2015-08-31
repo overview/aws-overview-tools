@@ -29,6 +29,8 @@ write_files:
       log_line_prefix = '%t '
       log_min_duration_statement = 500
       log_timezone = 'UTC'
+      log_destination = 'stderr,syslog'
+      syslog_facility = 'local0'
       maintenance_work_mem = 1GB
       max_connections = 50
       port = 5432
