@@ -114,15 +114,31 @@ write_files:
             match => [ "message", "%{SYSLOGLINE}" ]
             add_tag => "syslog"
             overwrite => [ "message" ]
+            break_on_match => false
           }
+          syslog_pri {}
+        }
 
-          # Now, parse for specific message types
-
-          # haproxy
+        if [program] == "haproxy" {
           grok {
             patterns_dir => "/etc/logstash/patterns"
             match => [ "message", "%{HAPROXYHTTP}" ]
             add_tag => [ "haproxy" ]
+          }
+        } else if [program] == "postgres" {
+          # Stitch together logged SQL queries. Each line starts with [\d+-1], so
+          # subsequent lines start with [\d+-(not 1)].
+          multiline {
+            pattern => "^\[\d+-(?:1\d|[2-9])\d*\]"
+            what => "previous"
+          }
+        } else if [program] == "logger" {
+          # This is one of our Java programs
+
+          # Stitch together exceptions
+          multiline {
+            pattern => "^(#011|Caused by:)"
+            what => "previous"
           }
 
           # File conversion
@@ -131,26 +147,21 @@ write_files:
             match => [ "message", "%{WORKER_FILE_CONVERSION}" ]
             add_tag => [ "worker", "file-conversion" ]
           }
-
+        
           # Docset creation
           grok {
             patterns_dir => "/etc/logstash/patterns"
             match => [ "message", "%{WORKER_DOCSET_CREATION}" ]
             add_tag => [ "worker", "docset-creation" ]
+            remove_tag => [ "_grokparsefailure" ]
           }
-
-          # Stack traces (TODO make this work, multiline-style)
+        
+          # Stack trace
           grok {
             patterns_dir => "/etc/logstash/patterns"
             match => [ "message", "%{JAVASTACKTRACEPART}" ]
-            add_tag => "java-exception"
-          }
-
-          # Postgres (TODO make this do something useful?)
-          grok {
-            patterns_dir => "/etc/logstash/patterns"
-            match => [ "message", "%{SYSLOGBASE} %{POSTGRESQL}" ]
-            add_tag => "postgresql"
+            add_tag => [ "notify", "java-exception" ]
+            remove_tag => [ "_grokparsefailure" ]
           }
         }
       }
@@ -158,6 +169,13 @@ write_files:
     content: |
       output {
         elasticsearch { host => localhost }
+
+        if "notify" in [tags] {
+          sns {
+            arn => "arn:aws:sns:us-east-1:711916283702:LogstashAlarms"
+            region => "us-east-1"
+          }
+        }
       }
 mounts:
   - [ xvdf, /var/lib/elasticsearch ]
@@ -168,6 +186,9 @@ runcmd:
   - /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
   - chown -R elasticsearch:elasticsearch /var/lib/elasticsearch
   - /opt/logstash/bin/plugin install logstash-input-relp
+  - /opt/logstash/bin/plugin install logstash-filter-multiline
+  - /opt/logstash/bin/plugin install logstash-filter-syslog_pri
+  - /opt/logstash/bin/plugin install logstash-output-sns
   - systemctl stop syslog || true
   - systemctl start syslog
   - systemctl stop elasticsearch || true

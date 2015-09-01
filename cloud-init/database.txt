@@ -26,7 +26,6 @@ write_files:
       hba_file = '/etc/postgresql/9.4/main/pg_hba.conf'
       ident_file = '/etc/postgresql/9.4/main/pg_ident.conf'
       listen_addresses = '*'
-      log_line_prefix = '%t '
       log_min_duration_statement = 500
       log_timezone = 'UTC'
       log_destination = 'stderr,syslog'
