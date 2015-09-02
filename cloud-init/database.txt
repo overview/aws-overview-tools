@@ -18,7 +18,7 @@ write_files:
       host overview overview 10.0.0.0/8 md5
   - path: /etc/postgresql/9.4/main/postgresql.conf
     content: |
-      checkpoint_segments = 30
+      checkpoint_segments = 100
       data_directory = '/var/lib/postgresql/9.4/main'
       datestyle = 'iso, ymd'
       dynamic_shared_memory_type = posix
