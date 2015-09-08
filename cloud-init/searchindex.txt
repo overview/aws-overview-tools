@@ -80,6 +80,7 @@ runcmd:
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
   - env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
   - chown -R elasticsearch:elasticsearch /var/lib/elasticsearch
+  - /usr/share/elasticsearch/bin/plugin install elasticsearch/elasticsearch-analysis-icu/2.7.0
   - systemctl stop syslog || true
   - systemctl start syslog
   - systemctl stop elasticsearch || true
