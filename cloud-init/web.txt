@@ -144,8 +144,7 @@ write_files:
         -cp "/opt/overview/db-evolution-applier/*" \
         -Dfile.encoding=UTF8 \
         -Duser.timezone=UTC \
-        com.overviewdocs.db_evolution_applier.Main \
-        2>&1 | logger -p local1.notice
+        com.overviewdocs.db_evolution_applier.Main
 
       exec /usr/bin/java \
         -cp "/opt/overview/frontend/*" \
@@ -156,8 +155,7 @@ write_files:
         -Dpidfile.path=/dev/null \
         -Duser.timezone=UTC \
         -Xmx1000m \
-        play.core.server.ProdServerStart /opt/overview \
-        2>&1 | logger -p local1.notice
+        play.core.server.ProdServerStart /opt/overview
 users:
   - default
   - name: overview

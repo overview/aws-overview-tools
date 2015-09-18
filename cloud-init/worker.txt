@@ -35,7 +35,7 @@ write_files:
       Restart=on-failure
       WorkingDirectory=/opt/overview
       User=overview
-      ExecStart=/opt/overview/run-worker.sh worker JobHandler local1.notice 3000m
+      ExecStart=/opt/overview/run-worker.sh worker JobHandler 3000m
   - path: /etc/systemd/system/overview-documentset-worker.service
     content: |
       [Unit]
@@ -45,7 +45,7 @@ write_files:
       Restart=on-failure
       WorkingDirectory=/opt/overview
       User=overview
-      ExecStart=/opt/overview/run-worker.sh documentset-worker com.overviewdocs.DocumentSetWorker local2.notice 2500m
+      ExecStart=/opt/overview/run-worker.sh documentset-worker com.overviewdocs.DocumentSetWorker 2500m
   - path: /opt/overview/prepare-worker.sh
     permissions: '0755'
     content: |
@@ -67,8 +67,7 @@ write_files:
 
       SERVER=$1 # "worker" or "documentset-worker"
       MAIN_CLASS=$2 # "JobHandler" or "com.overviewdocs.DocumentSetWorker"
-      SYSLOG_OUTPUT=$3 # "local1.notice" or "local2.notice"
-      MAX_MEMORY=$4 # "3000m" or "2500m"
+      MAX_MEMORY=$3 # "3000m" or "2500m"
 
       source /opt/overview/$SERVER-env.sh
 
@@ -79,8 +78,7 @@ write_files:
         -Dlogback.configurationFile=workerprodlog.xml \
         -Duser.timezone=UTC \
         -Xmx$MAX_MEMORY \
-        $MAIN_CLASS \
-        2>&1 | logger -p "$SYSLOG_OUTPUT"
+        $MAIN_CLASS
 users:
   - default
   - name: overview
