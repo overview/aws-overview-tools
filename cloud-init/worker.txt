@@ -17,6 +17,7 @@ packages:
   - tesseract-ocr-ita
   - tesseract-ocr-nld
   - tesseract-ocr-por
+  - tesseract-ocr-ron
   - tesseract-ocr-rus
   - tesseract-ocr-spa
   - tesseract-ocr-swe
