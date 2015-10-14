@@ -42,7 +42,7 @@ remote_build:
   instance_type: r3.large
   vpc_id: vpc-5c3fd138
   subnet_id: subnet-1e134747
-  ami_id: ami-ee793a86 # https://cloud-images.ubuntu.com/releases/14.10/release/ - 64-bit, hvm-ssd
+  ami_id: ami-fd256898 # https://cloud-images.ubuntu.com/releases/15.04/release/ - 64-bit, hvm-ssd
   cache_volume_id: vol-998c9fdb
   keypair_name: manage
   user_data: |
