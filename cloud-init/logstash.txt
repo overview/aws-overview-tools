@@ -132,7 +132,7 @@ write_files:
             pattern => "^\[\d+-(?:1\d|[2-9])\d*\]"
             what => "previous"
           }
-        } else if [program] == "run-worker.sh" or [program] == "run-frontend.sh" {
+        } else if [program] == "run-worker.sh" or [program] == "run-frontend.sh" or [program] == "java" {
           # This is one of our Java programs
 
           # Stitch together exceptions
