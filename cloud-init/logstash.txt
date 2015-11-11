@@ -137,7 +137,7 @@ write_files:
 
           # Stitch together exceptions
           multiline {
-            pattern => "^(#011|Caused by:)"
+            pattern => "^\s*(at |Caused by:)"
             what => "previous"
           }
 
