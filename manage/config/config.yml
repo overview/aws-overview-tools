@@ -33,8 +33,6 @@ machine_types:
       - sudo /opt/overview/prepare-worker.sh documentset-worker
       - sudo /opt/overview/prepare-worker.sh worker
       - sudo systemctl restart overview-worker overview-documentset-worker
-  database: {}
-  searchindex: {}
 
 remote_build:
   availability_zone: us-east-1a
