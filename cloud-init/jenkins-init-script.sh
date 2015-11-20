@@ -43,7 +43,7 @@ done
 IFS="$saveIFS"
 
 curl "$JENKINS_URL"jnlpJars/slave.jar -o /tmp/slave.jar && \
-  sudo java -jar /tmp/slave.jar -jnlpUrl "$JENKINS_URL"computer/"$SLAVE_NAME"/slave-agent.jnlp
+  sudo -u ubuntu java -jar /tmp/slave.jar -jnlpUrl "$JENKINS_URL"computer/"$SLAVE_NAME"/slave-agent.jnlp
 EOF
 sudo chown root:root /etc/rc.local
 sudo chmod 755 /etc/rc.local
