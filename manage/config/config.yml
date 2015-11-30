@@ -22,17 +22,15 @@ machine_types:
 
   worker:
     start_commands:
-      - sudo /opt/overview/prepare-worker.sh documentset-worker
       - sudo /opt/overview/prepare-worker.sh worker
-      - sudo systemctl start overview-worker overview-documentset-worker
+      - sudo systemctl start overview-worker
 
     stop:
-      - sudo systemctl stop overview-worker overview-documentset-worker
+      - sudo systemctl stop overview-worker
 
     restart_commands:
-      - sudo /opt/overview/prepare-worker.sh documentset-worker
       - sudo /opt/overview/prepare-worker.sh worker
-      - sudo systemctl restart overview-worker overview-documentset-worker
+      - sudo systemctl restart overview-worker
 
 remote_build:
   availability_zone: us-east-1a

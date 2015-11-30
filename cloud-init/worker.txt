@@ -36,49 +36,32 @@ write_files:
       Restart=on-failure
       WorkingDirectory=/opt/overview
       User=overview
-      ExecStart=/opt/overview/run-worker.sh worker JobHandler
-  - path: /etc/systemd/system/overview-documentset-worker.service
-    content: |
-      [Unit]
-      Description=Overview document-set worker
-
-      [Service]
-      Restart=on-failure
-      WorkingDirectory=/opt/overview
-      User=overview
-      ExecStart=/opt/overview/run-worker.sh documentset-worker com.overviewdocs.DocumentSetWorker
+      ExecStart=/opt/overview/run-worker.sh
   - path: /opt/overview/prepare-worker.sh
     permissions: '0755'
     content: |
       #!/bin/bash
 
-      SERVER=$1 # "worker" or "documentset-worker"
+      aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/worker-env.sh /opt/overview/worker-env.sh
+      aws s3 cp s3://overview-builds/#OVERVIEW_ENVIRONMENT#.zip /tmp/worker-archive.zip
+      FILENAMES=$(unzip -qq -p /tmp/worker-archive.zip archive/worker/classpath.txt | sed -e 's/^/archive\/lib\//')
+      rm -rf /opt/overview/worker
+      unzip -qq -d /opt/overview/worker -j /tmp/worker-archive.zip $FILENAMES
 
-      aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/worker-env.sh /opt/overview/$SERVER-env.sh
-      aws s3 cp s3://overview-builds/#OVERVIEW_ENVIRONMENT#.zip /tmp/$SERVER-archive.zip
-      FILENAMES=$(unzip -qq -p /tmp/$SERVER-archive.zip archive/$SERVER/classpath.txt | sed -e 's/^/archive\/lib\//')
-      rm -rf /opt/overview/$SERVER
-      unzip -qq -d /opt/overview/$SERVER -j /tmp/$SERVER-archive.zip $FILENAMES
-
-      rm -f /tmp/$SERVER-archive.zip
+      rm -f /tmp/worker-archive.zip
   - path: /opt/overview/run-worker.sh
     permissions: '0755'
     content: |
       #!/bin/bash
 
-      SERVER=$1 # "worker" or "documentset-worker"
-      MAIN_CLASS=$2 # "JobHandler" or "com.overviewdocs.DocumentSetWorker"
-
-      source /opt/overview/$SERVER-env.sh
+      source /opt/overview/worker-env.sh
 
       exec /usr/bin/java \
-        -cp "/opt/overview/$SERVER/*" \
+        -cp "/opt/overview/worker/*" \
         -Dfile.encoding=UTF8 \
-        -Dconfig.resource=production.conf \
-        -Dlogback.configurationFile=workerprodlog.xml \
         -Duser.timezone=UTC \
         -Xmx1000m \
-        $MAIN_CLASS
+        com.overviewdocs.Worker
 users:
   - default
   - name: overview
@@ -86,11 +69,9 @@ users:
 runcmd:
   - env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
   - /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
-  - /opt/overview/prepare-worker.sh documentset-worker
-  - /opt/overview/prepare-worker.sh worker
+  - /opt/overview/prepare-worker.sh
   - chown overview:overview /opt/overview -R
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
   - systemctl stop syslog || true
   - systemctl start syslog
   - systemctl start overview-worker
-  - systemctl start overview-documentset-worker
