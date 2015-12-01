@@ -348,14 +348,10 @@ if [ "$OVERVIEW_ENVIRONMENT" = 'logstash' ]; then
   wait_for_cloud_init $instance_ip
 else
   instance_types=(database searchindex worker web)
-  instance_ids=()
   for instance_type in ${instance_types[@]}; do
     >&2 echo "Ensuring $instance_type is launched..."
     instance_id=$(start_instance $instance_type)
-    instance_ids+=($instance_id)
-  done
 
-  for instance_id in ${instance_ids[@]}; do
     >&2 echo "Ensuring $instance_id is finished initializing..."
     instance_ip=$(wait_for_instance_ip $instance_id)
     wait_for_ssh $instance_ip
