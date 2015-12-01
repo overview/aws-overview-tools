@@ -31,6 +31,8 @@ machine_types:
     restart_commands:
       - sudo /opt/overview/prepare-worker.sh worker
       - sudo systemctl restart overview-worker
+  database: {} # so overview-manage status shows it, so we can SSH to it
+  searchindex: {} # so overview-manage status shows it, so we can SSH to it
 
 remote_build:
   availability_zone: us-east-1a
