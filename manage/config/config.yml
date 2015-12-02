@@ -33,7 +33,19 @@ machine_types:
       - sudo systemctl restart overview-worker
   database: {} # so overview-manage status shows it, so we can SSH to it
   searchindex: {} # so overview-manage status shows it, so we can SSH to it
+  conglomerate:
+    start_commands:
+      - sudo /opt/overview/prepare-frontend.sh
+      - sudo /opt/overview/prepare-worker.sh
+      - sudo systemctl start overview-frontend overview-worker
 
+    stop_commands:
+      - sudo systemctl stop overview-frontend overview-worker
+
+    restart_commands:
+      - sudo /opt/overview/prepare-frontend.sh
+      - sudo /opt/overview/prepare-worker.sh
+      - sudo systemctl restart overview-frontend overview-worker
 remote_build:
   availability_zone: us-east-1a
   security_group_id: sg-cb1d97ac
