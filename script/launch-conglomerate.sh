@@ -206,8 +206,8 @@ run_production_conglomerate() {
   instance_id=$(ec2_run_instances r3.xlarge production-conglomerate conglomerate --block-device-mappings "[{\"DeviceName\":\"/dev/sdb\",\"VirtualName\":\"ephemeral0\"}]")
 
   # Attach the volumes. There's a race here, but what are the odds we'll go from
-  # null machine to Postgres/ElasticSearch up and running within 10s?
-  sleep 10
+  # null machine to Postgres/ElasticSearch up and running within 60s?
+  sleep 60
 
   aws ec2 attach-volume \
     --volume-id $database_volume_id \
