@@ -14,6 +14,9 @@
 export DEBIAN_FRONTEND=noninteractive
 
 curl -sL https://deb.nodesource.com/setup_5.x | sudo -E bash -
+# http://docs.docker.com/engine/installation/ubuntulinux/
+sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+echo "deb https://apt.dockerproject.org/repo ubuntu-wily main" | sudo tee /etc/apt/sources.list.d/docker.list
 
 sudo apt-get -y -q update
 sudo apt-get -y -q dist-upgrade
@@ -21,7 +24,7 @@ sudo apt-get -y -q dist-upgrade
 sudo apt-get -y -q update
 sudo apt-get -y -q dist-upgrade
 
-sudo apt-get -y -q install build-essential ca-certificates ca-certificates-java libreoffice nodejs openjdk-8-jdk openjdk-8-jre-headless postgresql-9.4 rsyslog-relp tesseract-ocr tesseract-ocr-ara tesseract-ocr-cat tesseract-ocr-deu tesseract-ocr-fra tesseract-ocr-ita tesseract-ocr-nld tesseract-ocr-por tesseract-ocr-ron tesseract-ocr-rus tesseract-ocr-spa tesseract-ocr-swe unzip zip
+sudo apt-get -y -q install build-essentiala ca-certificates ca-certificates-java docker-compose docker-engine libreoffice openjdk-8-jdk openjdk-8-jre-headless nodejs postgresql-9.4 tesseract-ocr tesseract-ocr-ara tesseract-ocr-cat tesseract-ocr-deu tesseract-ocr-fra tesseract-ocr-ita tesseract-ocr-nld tesseract-ocr-por tesseract-ocr-ron tesseract-ocr-rus tesseract-ocr-spa tesseract-ocr-swe unzip zip
 
 # ca-certificates-java installs JRE7 in an apt-dependency vortex of uselessness
 sudo apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless
@@ -47,3 +50,13 @@ curl "$JENKINS_URL"jnlpJars/slave.jar -o /tmp/slave.jar && \
 EOF
 sudo chown root:root /etc/rc.local
 sudo chmod 755 /etc/rc.local
+
+# Cache Java/Node dependencies.
+#
+# Do this before creating an AMI. It's unnecessary, and it doesn't cache the
+# dependencies of *future* versions of Overview.... Nevertheless, it saves a
+# ton of time each build.
+(do this before creating an AMI)
+git clone https://github.com/overview/overview-server
+(cd overview-server && ./sbt '; common/update; common/test:update; worker/update; worker/test:update; update; test:update; db-evolution-applier/update' && auto/setup-coffee-tests.sh && auto/setup-integration-tests.sh)
+rm -rf overview-server
