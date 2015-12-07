@@ -299,7 +299,9 @@ runcmd:
   - mv /tmp/* /tmp2
   - mv /tmp/.??* /tmp2
   - rmdir /tmp
+  - umount /dev/xvdb
   - mv /tmp2 /tmp
+  - mount /dev/xvdb /tmp
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
   - env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
   - /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
