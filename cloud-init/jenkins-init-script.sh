@@ -24,7 +24,10 @@ sudo apt-get -y -q dist-upgrade
 sudo apt-get -y -q update
 sudo apt-get -y -q dist-upgrade
 
-sudo apt-get -y -q install build-essentiala ca-certificates ca-certificates-java docker-compose docker-engine libreoffice openjdk-8-jdk openjdk-8-jre-headless nodejs postgresql-9.4 tesseract-ocr tesseract-ocr-ara tesseract-ocr-cat tesseract-ocr-deu tesseract-ocr-fra tesseract-ocr-ita tesseract-ocr-nld tesseract-ocr-por tesseract-ocr-ron tesseract-ocr-rus tesseract-ocr-spa tesseract-ocr-swe unzip zip
+sudo apt-get -y -q install build-essential ca-certificates ca-certificates-java docker-engine libreoffice openjdk-8-jdk openjdk-8-jre-headless nodejs postgresql-9.4 tesseract-ocr tesseract-ocr-ara tesseract-ocr-cat tesseract-ocr-deu tesseract-ocr-fra tesseract-ocr-ita tesseract-ocr-nld tesseract-ocr-por tesseract-ocr-ron tesseract-ocr-rus tesseract-ocr-spa tesseract-ocr-swe xvfb unzip zip libpython-dev libyaml-dev
+sudo easy_install docker-compose
+
+sudo usermod -G docker ubuntu # make "docker start" work for ubuntu
 
 # ca-certificates-java installs JRE7 in an apt-dependency vortex of uselessness
 sudo apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless
@@ -56,7 +59,7 @@ sudo chmod 755 /etc/rc.local
 # Do this before creating an AMI. It's unnecessary, and it doesn't cache the
 # dependencies of *future* versions of Overview.... Nevertheless, it saves a
 # ton of time each build.
-(do this before creating an AMI)
 git clone https://github.com/overview/overview-server
-(cd overview-server && ./sbt '; common/update; common/test:update; worker/update; worker/test:update; update; test:update; db-evolution-applier/update' && auto/setup-coffee-tests.sh && auto/setup-integration-tests.sh)
+sudo systemctl start docker # for docker-compose pull
+(cd overview-server && ./sbt '; common/update; common/test:update; worker/update; worker/test:update; update; test:update; db-evolution-applier/update' && auto/setup-coffee-tests.sh && auto/setup-integration-tests.sh && sudo docker-compose pull)
 rm -rf overview-server
