@@ -32,6 +32,8 @@ usage() {
   exit 1
 }
 
+[ "$1" = "logstash" ] || fatal 'Use `launch-conglomerate.sh`. This file only launches logstash now.'
+
 : ${AWS_ACCESS_KEY_ID:?'You must set the AWS_ACCESS_KEY_ID environment variable'}
 : ${AWS_SECRET_ACCESS_KEY:?'You must set the AWS_SECRET_ACCESS_KEY environment variable'}
 : ${AWS_DEFAULT_REGION:?'You must set the AWS_DEFAULT_REGION environment variable'}
