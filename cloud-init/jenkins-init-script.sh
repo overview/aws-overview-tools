@@ -24,7 +24,7 @@ sudo apt-get -y -q dist-upgrade
 sudo apt-get -y -q update
 sudo apt-get -y -q dist-upgrade
 
-sudo apt-get -y -q install build-essential ca-certificates ca-certificates-java docker-engine libreoffice openjdk-8-jdk openjdk-8-jre-headless nodejs postgresql-9.4 tesseract-ocr tesseract-ocr-ara tesseract-ocr-cat tesseract-ocr-deu tesseract-ocr-fra tesseract-ocr-ita tesseract-ocr-nld tesseract-ocr-por tesseract-ocr-ron tesseract-ocr-rus tesseract-ocr-spa tesseract-ocr-swe xvfb unzip zip libpython-dev libyaml-dev
+sudo apt-get -y -q install build-essential ca-certificates ca-certificates-java docker-engine firefox libreoffice openjdk-8-jdk openjdk-8-jre-headless nodejs postgresql-9.4 tesseract-ocr tesseract-ocr-ara tesseract-ocr-cat tesseract-ocr-deu tesseract-ocr-fra tesseract-ocr-ita tesseract-ocr-nld tesseract-ocr-por tesseract-ocr-ron tesseract-ocr-rus tesseract-ocr-spa tesseract-ocr-swe xvfb unzip zip libpython-dev libyaml-dev
 sudo easy_install docker-compose
 
 sudo usermod -G docker ubuntu # make "docker start" work for ubuntu
