@@ -170,7 +170,7 @@ write_files:
       output {
         elasticsearch { host => localhost }
 
-        if "notify" in [tags] {
+        if ("notify" in [tags]) and !([class] == "org.jboss.netty.channel.socket.nio.AbstractNioWorker" and [message] == "cleanUpWriteBuffer") {
           sns {
             arn => "arn:aws:sns:us-east-1:711916283702:LogstashAlarms"
             region => "us-east-1"
