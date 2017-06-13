@@ -2,45 +2,11 @@
 hostname: #OVERVIEW_ENVIRONMENT#-conglomerate
 repo_update: true
 repo_upgrade: all
-apt_sources:
-  - source: "deb http://packages.elastic.co/elasticsearch/2.x/debian stable main"
-    key: |
-      -----BEGIN PGP PUBLIC KEY BLOCK-----
-      Version: SKS 1.1.5
-      Comment: Hostname: pgp.mit.edu
-
-      mQENBFI3HsoBCADXDtbNJnxbPqB1vDNtCsqhe49vFYsZN9IOZsZXgp7aHjh6CJBDA+bGFOwy
-      hbd7at35jQjWAw1O3cfYsKAmFy+Ar3LHCMkV3oZspJACTIgCrwnkic/9CUliQe324qvObU2Q
-      RtP4Fl0zWcfb/S8UYzWXWIFuJqMvE9MaRY1bwUBvzoqavLGZj3SF1SPO+TB5QrHkrQHBsmX+
-      Jda6d4Ylt8/t6CvMwgQNlrlzIO9WT+YN6zS+sqHd1YK/aY5qhoLNhp9G/HxhcSVCkLq8SStj
-      1ZZ1S9juBPoXV1ZWNbxFNGwOh/NYGldD2kmBf3YgCqeLzHahsAEpvAm8TBa7Q9W21C8vABEB
-      AAG0RUVsYXN0aWNzZWFyY2ggKEVsYXN0aWNzZWFyY2ggU2lnbmluZyBLZXkpIDxkZXZfb3Bz
-      QGVsYXN0aWNzZWFyY2gub3JnPokBOAQTAQIAIgUCUjceygIbAwYLCQgHAwIGFQgCCQoLBBYC
-      AwECHgECF4AACgkQ0n1mbNiOQrRzjAgAlTUQ1mgo3nK6BGXbj4XAJvuZDG0HILiUt+pPnz75
-      nsf0NWhqR4yGFlmpuctgCmTD+HzYtV9fp9qW/bwVuJCNtKXk3sdzYABY+Yl0Cez/7C2GuGCO
-      lbn0luCNT9BxJnh4mC9h/cKI3y5jvZ7wavwe41teqG14V+EoFSn3NPKmTxcDTFrV7SmVPxCB
-      cQze00cJhprKxkuZMPPVqpBS+JfDQtzUQD/LSFfhHj9eD+Xe8d7sw+XvxB2aN4gnTlRzjL1n
-      TRp0h2/IOGkqYfIG9rWmSLNlxhB2t+c0RsjdGM4/eRlPWylFbVMc5pmDpItrkWSnzBfkmXL3
-      vO2X3WvwmSFiQbkBDQRSNx7KAQgA5JUlzcMW5/cuyZR8alSacKqhSbvoSqqbzHKcUQZmlzNM
-      KGTABFG1yRx9r+wa/fvqP6OTRzRDvVS/cycws8YX7Ddum7x8uI95b9ye1/Xy5noPEm8cD+hp
-      lnpU+PBQZJ5XJ2I+1l9Nixx47wPGXeClLqcdn0ayd+v+Rwf3/XUJrvccG2YZUiQ4jWZkoxsA
-      07xx7Bj+Lt8/FKG7sHRFvePFU0ZS6JFx9GJqjSBbHRRkam+4emW3uWgVfZxuwcUCn1ayNgRt
-      KiFv9jQrg2TIWEvzYx9tywTCxc+FFMWAlbCzi+m4WD+QUWWfDQ009U/WM0ks0KwwEwSk/UDu
-      ToxGnKU2dQARAQABiQEfBBgBAgAJBQJSNx7KAhsMAAoJENJ9ZmzYjkK0c3MIAIE9hAR20mqJ
-      WLcsxLtrRs6uNF1VrpB+4n/55QU7oxA1iVBO6IFu4qgsF12JTavnJ5MLaETlggXY+zDef9sy
-      TPXoQctpzcaNVDmedwo1SiL03uMoblOvWpMR/Y0j6rm7IgrMWUDXDPvoPGjMl2q1iTeyHkMZ
-      EyUJ8SKsaHh4jV9wp9KmC8C+9CwMukL7vM5w8cgvJoAwsp3Fn59AxWthN3XJYcnMfStkIuWg
-      R7U2r+a210W6vnUxU4oN0PmMcursYPyeV0NX/KQeUeNMwGTFB6QHS/anRaGQewijkrYYoTNt
-      fllxIu9XYmiBERQ/qPDlGRlOgVTd9xUfHFkzB52c70E=
-      =92oX
-      -----END PGP PUBLIC KEY BLOCK-----
 packages:
   - awscli
   - ca-certificates
   - ca-certificates-java
-  - elasticsearch
   - libreoffice
-  - haproxy
   - openjdk-8-jre-headless
   - postgresql-9.4
   - postgresql-contrib-9.4
@@ -91,22 +57,6 @@ write_files:
       timezone = 'UTC'
       unix_socket_directories = '/var/run/postgresql'
       work_mem = 128MB
-  - path: /etc/default/elasticsearch
-    content: |
-      # Set 5GB heap. ES docs say memory should be 50% disk cache, 50% JVM.
-      # (https://www.elastic.co/guide/en/elasticsearch/guide/current/heap-sizing.html#_give_half_your_memory_to_lucene)
-      # We want to peg ES at ~8GB, but in practice our other processes will be
-      # far below 22GB, so we configure ES to operate optimally when the kernel
-      # gives it 10GB.
-      ES_HEAP_SIZE=5000m
-      MAX_LOCKED_MEMORY=unlimited
-      CONF_DIR=/etc/elasticsearch
-      DATA_DIR=/var/lib/elasticsearch/data
-  - path: /etc/elasticsearch/elasticsearch.yml
-    content: |
-      bootstrap.mlockall: true
-      cluster.name: overview-search-index
-      discovery.zen.ping.multicast.enabled: false
   - path: /etc/systemd/system/overview-worker.service
     content: |
       [Unit]
@@ -142,79 +92,6 @@ write_files:
         -Duser.timezone=UTC \
         -Xmx1000m \
         com.overviewdocs.Worker
-  - path: /etc/haproxy/haproxy.cfg.overview # if we write haproxy.cfg, dpkg fails to install haproxy (no SSL certs yet)
-    content: |
-      global
-        log /dev/log local0
-        user haproxy
-        group haproxy
-        tune.ssl.default-dh-param 2048
-
-      defaults
-        log global
-        option httplog
-        option http-server-close
-        option forwardfor
-        maxconn 4096
-
-      frontend http_redirect
-        mode http
-        bind 0.0.0.0:80
-        timeout client 50s
-        redirect prefix https://#OVERVIEW_ENVIRONMENT_ADDRESS# code 301 
-
-        capture request header Host len 40
-        capture request header X-Forwarded-For len 50
-        capture request header Accept-Language len 50
-        capture request header Referer len 200
-        capture request header User-Agent len 200
-
-        capture response header Content-Type len 30
-        capture response header Content-Encoding len 10
-        capture response header Cache-Control len 200
-        capture response header Last-Modified len 200
-
-      frontend overview_frontend
-        mode http
-
-        # Keys from https://wiki.mozilla.org/Security/Server_Side_TLS
-        #
-        # Certs ... long story. We used to have overviewproject.org certs, but
-        # now we're overviewdocs.com. We need to maintain the redirect, meaning
-        # we need to serve with an SSL certificate for *.overviewproject.org
-        # *AND* a certificate for *.overviewdocs.com.
-        bind 0.0.0.0:443 ssl crt /etc/haproxy/ssl.pem crt /etc/haproxy/ssl-old.pem ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK
-
-        timeout client 50s
-
-        # Redirect old URLs to new
-        redirect prefix https://#OVERVIEW_ENVIRONMENT_ADDRESS# code 301 if { ssl_fc_sni_end overviewproject.org }
-
-        acl canonical_url hdr_dom(Host) eq #OVERVIEW_ENVIRONMENT_ADDRESS#
-        redirect prefix https://#OVERVIEW_ENVIRONMENT_ADDRESS# code 301 if !canonical_url
-
-        # Add the HSTS header with a 1 year max-age
-        rspadd Strict-Transport-Security:\ max-age=31536000
-
-        default_backend overview_backend
-
-        capture request header Host len 40
-        capture request header X-Forwarded-For len 50
-        capture request header Accept-Language len 50
-        capture request header Referer len 200
-        capture request header User-Agent len 200
-
-        capture response header Content-Type len 30
-        capture response header Content-Encoding len 10
-        capture response header Cache-Control len 200
-        capture response header Last-Modified len 200
-
-      backend overview_backend
-        mode http
-        timeout connect 5s
-        timeout server 120s
-
-        server overview 127.0.0.1:9000
   - path: /etc/redis/redis.conf
     content: |
       daemonize yes
@@ -288,9 +165,10 @@ users:
     home: /opt/overview
 mounts:
   - [ xvdf, /var/lib/postgresql ]
-  - [ xvdg, /var/lib/elasticsearch ]
+  - [ xvdg, /opt/overview/searchindex ]
 mount_default_fields: [ None, None, 'auto', 'defaults,nobootwait', '0', '2' ]
 runcmd:
+  - dpkg --purge lxc lxcfs python3-lxc # Ubuntu routes 10.0.1.0/24 through "lxcbr0" by default! AAAAH!
   - mkfs.ext2 /dev/xvdb
   - mkdir /tmp2
   - chmod a+rwxt /tmp2
@@ -305,17 +183,11 @@ runcmd:
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
   - env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
   - /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
-  - chown -R elasticsearch:elasticsearch /var/lib/elasticsearch
   - chown -R postgres:postgres /var/lib/postgresql /etc/postgresql
   - systemctl stop syslog || true
   - systemctl start syslog
-  - systemctl stop elasticsearch postgresql haproxy redis-server
-  - mv /etc/haproxy/haproxy.cfg.overview /etc/haproxy/haproxy.cfg
-  - aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/ssl-old.pem /etc/haproxy/ssl-old.pem
-  - aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/ssl.pem /etc/haproxy/ssl.pem
-  - /usr/share/elasticsearch/bin/plugin install analysis-icu
-  - systemctl start elasticsearch postgresql haproxy redis-server
-  - if [ "#OVERVIEW_ENVIRONMENT#" = "staging" ]; then sudo -u postgres psql overview -c "UPDATE file SET contents_location = REPLACE(contents_location, 's3:overview-production-', 's3:overview-staging-'), view_location = REPLACE(view_location, 's3:overview-production-', 's3:overview-staging-'); UPDATE page SET data_location = REPLACE(data_location, 's3:overview-production-', 's3:overview-staging-')"; fi
+  - systemctl stop postgresql redis-server
+  - systemctl start postgresql redis-server
   - /opt/overview/prepare-worker.sh
   - /opt/overview/prepare-frontend.sh
   - chown -R overview:overview /opt/overview
