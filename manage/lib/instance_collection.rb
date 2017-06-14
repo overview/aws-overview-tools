@@ -29,7 +29,7 @@ class InstanceCollection
 
         Instance.new({
           'env' => environment_tag.value,
-          'type' => group == 'logstash' ? 'logstash' : group.split(/-/)[0],
+          'type' => group == 'logstash' ? 'logstash' : group.split(/-/, 2)[1],
           'ip_address' => instance.private_ip_address
         })
       end
