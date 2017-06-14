@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 
-require 'aws-sdk'
 require 'bundler/setup'
+
+require 'aws-sdk'
 require 'yaml'
 
 require_relative 'lib/runner'
