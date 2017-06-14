@@ -15,11 +15,11 @@ RSpec.describe Runner do
 
   before(:each) do
     @some_machines = [
-      double(environment: 'ENV1', type: 'TYPE1', ip_address: '10.1.1.1'),
-      double(environment: 'ENV1', type: 'TYPE2', ip_address: '10.1.1.2'),
-      double(environment: 'ENV2', type: 'TYPE1', ip_address: '10.1.1.3'),
-      double(environment: 'ENV2', type: 'TYPE2', ip_address: '10.1.1.4'),
-      double(environment: 'ENV2', type: 'TYPE2', ip_address: '10.1.1.5'),
+      double(environment: 'ENV1', type: double(name: 'TYPE1'), ip_address: '10.1.1.1'),
+      double(environment: 'ENV1', type: double(name: 'TYPE2'), ip_address: '10.1.1.2'),
+      double(environment: 'ENV2', type: double(name: 'TYPE1'), ip_address: '10.1.1.3'),
+      double(environment: 'ENV2', type: double(name: 'TYPE2'), ip_address: '10.1.1.4'),
+      double(environment: 'ENV2', type: double(name: 'TYPE2'), ip_address: '10.1.1.5'),
     ]
   end
 

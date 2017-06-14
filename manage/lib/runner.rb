@@ -11,7 +11,7 @@ require_relative 'commands/restart_command'
 require_relative 'commands/start_command'
 require_relative 'commands/stop_command'
 require_relative 'machine'
-require_relative 'store'
+require_relative 'state'
 
 class Runner
   attr_reader(:state, :commands)

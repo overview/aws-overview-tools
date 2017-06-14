@@ -12,6 +12,32 @@ class InstanceCollection
     end
   end
 
+  def self.read_from_aws(ec2_client)
+    result = ec2_client.describe_instances(filters: [
+      { name: 'instance-state-name', values: %w(running) },
+      { name: 'instance.group-name', values: %w(logstash staging-conglomerate production-conglomerate) },
+    ])
+
+    instances = result.reservations.flat_map do |reservation|
+      reservation.instances.map do |instance|
+        group = instance.security_groups[0].group_name
+        environment_tag = instance.tags.find{ |t| t.key == 'Environment' }
+        if environment_tag.nil?
+          puts "Instance #{instance.instance_id} is missing an 'Environment' tag; please add one in AWS console"
+          exit 1
+        end
+
+        Instance.new({
+          'env' => environment_tag.value,
+          'type' => group == 'logstash' ? 'logstash' : group.split(/-/)[0],
+          'ip_address' => instance.private_ip_address
+        })
+      end
+    end
+
+    InstanceCollection.new(instances)
+  end
+
   def empty?
     @instances.empty?
   end
