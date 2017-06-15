@@ -90,7 +90,7 @@ write_files:
         -cp "/opt/overview/worker/*" \
         -Dfile.encoding=UTF8 \
         -Duser.timezone=UTC \
-        -Xmx1000m \
+        -Xmx$JVM_MEMORY \
         com.overviewdocs.Worker
   - path: /etc/redis/redis.conf
     content: |
