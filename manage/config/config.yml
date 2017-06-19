@@ -8,6 +8,11 @@ sources:
       - ./build archive.zip
 
 machine_types:
+  logstash:
+    start_commands: []
+    stop_commands: []
+    restart_commands: []
+
   conglomerate:
     start_commands:
       - sudo /opt/overview/prepare-frontend.sh
