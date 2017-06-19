@@ -52,6 +52,7 @@ class Runner
   def machines
     @machines ||= @state.instances.map do |instance|
       type = @store.machine_types[instance.type]
+      raise Error.new("Unknown machine type #{instance.type}") if type.nil?
       Machine.new(
         environment: instance.env,
         ip_address: instance.ip_address,
