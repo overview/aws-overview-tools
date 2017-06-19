@@ -168,7 +168,7 @@ mounts:
   - [ xvdg, /opt/overview/searchindex ]
 mount_default_fields: [ None, None, 'auto', 'defaults,nobootwait', '0', '2' ]
 runcmd:
-  - dpkg --purge lxc lxcfs python3-lxc # Ubuntu routes 10.0.1.0/24 through "lxcbr0" by default! AAAAH!
+  - env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge lxc lxcfs python3-lxc # Ubuntu routes 10.0.1.0/24 through "lxcbr0" by default! AAAAH!
   - mkfs.ext2 /dev/xvdb
   - mkdir /tmp2
   - chmod a+rwxt /tmp2
