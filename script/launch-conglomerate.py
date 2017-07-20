@@ -34,7 +34,7 @@ Constants = {
     'Subnet2AvailabilityZone': 'us-east-1e',
 
     # ELB stuff
-    'SslCertificateName': { 'production': 'overviewdocs.com', 'staging': 'staging.overviewdocs.com' },
+    'SslCertificateName': { 'production': 'www.overviewdocs.com', 'staging': 'staging.overviewdocs.com' },
 }
 
 ACM = boto3.client('acm')
