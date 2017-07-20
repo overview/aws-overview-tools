@@ -15,17 +15,17 @@ machine_types:
 
   conglomerate:
     start_commands:
-      - sudo /opt/overview/prepare-frontend.sh
+      - sudo /opt/overview/prepare-web.sh
       - sudo /opt/overview/prepare-worker.sh
-      - sudo systemctl start overview-frontend overview-worker
+      - sudo systemctl start overview-web overview-worker
 
     stop_commands:
-      - sudo systemctl stop overview-frontend overview-worker
+      - sudo systemctl stop overview-web overview-worker
 
     restart_commands:
-      - sudo /opt/overview/prepare-frontend.sh
+      - sudo /opt/overview/prepare-web.sh
       - sudo /opt/overview/prepare-worker.sh
-      - sudo systemctl restart overview-frontend overview-worker
+      - sudo systemctl restart overview-web overview-worker
 
 remote_build:
   availability_zone: us-east-1a

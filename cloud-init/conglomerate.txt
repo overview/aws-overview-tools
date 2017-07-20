@@ -107,7 +107,7 @@ write_files:
       maxmemory-samples 5
       slowlog-log-slower-than 10000
       slowlog-max-len 128
-  - path: /etc/systemd/system/overview-frontend.service
+  - path: /etc/systemd/system/overview-web.service
     content: |
       [Unit]
       Description=Overview web server
@@ -117,31 +117,31 @@ write_files:
       WorkingDirectory=/opt/overview
       User=overview
       Type=simple
-      ExecStart=/opt/overview/run-frontend.sh
-  - path: /opt/overview/prepare-frontend.sh
+      ExecStart=/opt/overview/run-web.sh
+  - path: /opt/overview/prepare-web.sh
     permissions: '0755'
     content: |
       #!/bin/bash
 
-      aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/frontend-env.sh /opt/overview/frontend-env.sh
+      aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/web-env.sh /opt/overview/web-env.sh
 
       aws s3 cp s3://overview-builds/#OVERVIEW_ENVIRONMENT#.zip /tmp/archive.zip
 
-      FILENAMES=$(unzip -qq -p /tmp/archive.zip archive/frontend/classpath.txt | sed -e 's/^/archive\/lib\//')
-      rm -rf /opt/overview/frontend
-      unzip -qq -d /opt/overview/frontend -j /tmp/archive.zip $FILENAMES
+      FILENAMES=$(unzip -qq -p /tmp/archive.zip archive/web/classpath.txt | sed -e 's/^/archive\/lib\//')
+      rm -rf /opt/overview/web
+      unzip -qq -d /opt/overview/web -j /tmp/archive.zip $FILENAMES
 
       EVOLUTION_FILENAMES=$(unzip -qq -p /tmp/archive.zip archive/db-evolution-applier/classpath.txt | sed -e 's/^/archive\/lib\//')
       rm -rf /opt/overview/db-evolution-applier
       unzip -qq -d /opt/overview/db-evolution-applier -j /tmp/archive.zip $EVOLUTION_FILENAMES
 
       rm -f /tmp/archive.zip
-  - path: /opt/overview/run-frontend.sh
+  - path: /opt/overview/run-web.sh
     permissions: '0755'
     content: |
       #!/bin/bash
 
-      source /opt/overview/frontend-env.sh
+      source /opt/overview/web-env.sh
 
       DATABASE_PORT=5432 /usr/bin/java \
         -cp "/opt/overview/db-evolution-applier/*" \
@@ -150,11 +150,10 @@ write_files:
         com.overviewdocs.db_evolution_applier.Main
 
       exec /usr/bin/java \
-        -cp "/opt/overview/frontend/*" \
+        -cp "/opt/overview/web/*" \
         -Dconfig.resource=production.conf \
         -Dfile.encoding=UTF8 \
         -Dhttp.port=9000 \
-        -Dlogback.configurationFile=productionlog.xml \
         -Dpidfile.path=/dev/null \
         -Duser.timezone=UTC \
         -Xmx1000m \
@@ -189,6 +188,6 @@ runcmd:
   - systemctl stop postgresql redis-server
   - systemctl start postgresql redis-server
   - /opt/overview/prepare-worker.sh
-  - /opt/overview/prepare-frontend.sh
+  - /opt/overview/prepare-web.sh
   - chown -R overview:overview /opt/overview
-  - systemctl start overview-frontend overview-worker
+  - systemctl start overview-web overview-worker
