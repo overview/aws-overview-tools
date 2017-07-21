@@ -3,66 +3,37 @@ hostname: logstash
 repo_update: true
 repo_upgrade: all
 apt_sources:
-  - source: "deb http://packages.elasticsearch.org/elasticsearch/1.7/debian stable main"
+  - source: "deb https://artifacts.elastic.co/packages/5.x/apt stable main"
     key: |
       -----BEGIN PGP PUBLIC KEY BLOCK-----
-      Version: SKS 1.1.5
-      Comment: Hostname: pgp.mit.edu
+      Version: GnuPG v2.0.14 (GNU/Linux)
 
-      mQENBFI3HsoBCADXDtbNJnxbPqB1vDNtCsqhe49vFYsZN9IOZsZXgp7aHjh6CJBDA+bGFOwy
-      hbd7at35jQjWAw1O3cfYsKAmFy+Ar3LHCMkV3oZspJACTIgCrwnkic/9CUliQe324qvObU2Q
-      RtP4Fl0zWcfb/S8UYzWXWIFuJqMvE9MaRY1bwUBvzoqavLGZj3SF1SPO+TB5QrHkrQHBsmX+
-      Jda6d4Ylt8/t6CvMwgQNlrlzIO9WT+YN6zS+sqHd1YK/aY5qhoLNhp9G/HxhcSVCkLq8SStj
-      1ZZ1S9juBPoXV1ZWNbxFNGwOh/NYGldD2kmBf3YgCqeLzHahsAEpvAm8TBa7Q9W21C8vABEB
-      AAG0RUVsYXN0aWNzZWFyY2ggKEVsYXN0aWNzZWFyY2ggU2lnbmluZyBLZXkpIDxkZXZfb3Bz
-      QGVsYXN0aWNzZWFyY2gub3JnPokBOAQTAQIAIgUCUjceygIbAwYLCQgHAwIGFQgCCQoLBBYC
-      AwECHgECF4AACgkQ0n1mbNiOQrRzjAgAlTUQ1mgo3nK6BGXbj4XAJvuZDG0HILiUt+pPnz75
-      nsf0NWhqR4yGFlmpuctgCmTD+HzYtV9fp9qW/bwVuJCNtKXk3sdzYABY+Yl0Cez/7C2GuGCO
-      lbn0luCNT9BxJnh4mC9h/cKI3y5jvZ7wavwe41teqG14V+EoFSn3NPKmTxcDTFrV7SmVPxCB
-      cQze00cJhprKxkuZMPPVqpBS+JfDQtzUQD/LSFfhHj9eD+Xe8d7sw+XvxB2aN4gnTlRzjL1n
-      TRp0h2/IOGkqYfIG9rWmSLNlxhB2t+c0RsjdGM4/eRlPWylFbVMc5pmDpItrkWSnzBfkmXL3
-      vO2X3WvwmSFiQbkBDQRSNx7KAQgA5JUlzcMW5/cuyZR8alSacKqhSbvoSqqbzHKcUQZmlzNM
-      KGTABFG1yRx9r+wa/fvqP6OTRzRDvVS/cycws8YX7Ddum7x8uI95b9ye1/Xy5noPEm8cD+hp
-      lnpU+PBQZJ5XJ2I+1l9Nixx47wPGXeClLqcdn0ayd+v+Rwf3/XUJrvccG2YZUiQ4jWZkoxsA
-      07xx7Bj+Lt8/FKG7sHRFvePFU0ZS6JFx9GJqjSBbHRRkam+4emW3uWgVfZxuwcUCn1ayNgRt
-      KiFv9jQrg2TIWEvzYx9tywTCxc+FFMWAlbCzi+m4WD+QUWWfDQ009U/WM0ks0KwwEwSk/UDu
-      ToxGnKU2dQARAQABiQEfBBgBAgAJBQJSNx7KAhsMAAoJENJ9ZmzYjkK0c3MIAIE9hAR20mqJ
-      WLcsxLtrRs6uNF1VrpB+4n/55QU7oxA1iVBO6IFu4qgsF12JTavnJ5MLaETlggXY+zDef9sy
-      TPXoQctpzcaNVDmedwo1SiL03uMoblOvWpMR/Y0j6rm7IgrMWUDXDPvoPGjMl2q1iTeyHkMZ
-      EyUJ8SKsaHh4jV9wp9KmC8C+9CwMukL7vM5w8cgvJoAwsp3Fn59AxWthN3XJYcnMfStkIuWg
-      R7U2r+a210W6vnUxU4oN0PmMcursYPyeV0NX/KQeUeNMwGTFB6QHS/anRaGQewijkrYYoTNt
-      fllxIu9XYmiBERQ/qPDlGRlOgVTd9xUfHFkzB52c70E=
-      =92oX
-      -----END PGP PUBLIC KEY BLOCK-----
-  - source: "deb http://packages.elasticsearch.org/logstash/1.5/debian stable main"
-    key: |
-      -----BEGIN PGP PUBLIC KEY BLOCK-----
-      Version: SKS 1.1.5
-      Comment: Hostname: pgp.mit.edu
-
-      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
+      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
+      qPDlGRlOgVTd9xUfHFkzB52c70E=
       =92oX
       -----END PGP PUBLIC KEY BLOCK-----
 packages:
@@ -70,24 +41,52 @@ packages:
   - openjdk-8-jre-headless
   - elasticsearch
   - logstash
+  - kibana
 write_files:
   - path: /etc/rsyslog.d/39-logstash.conf
     content: |
       $ModLoad omrelp
       *.* :omrelp:127.0.0.1:2514
-  - path: /etc/default/elasticsearch
+  - path: /etc/elasticsearch/elasticsearch.opts
     content: |
-      ES_HEAP_SIZE=1800m
-      MAX_LOCKED_MEMORY=unlimited
-      CONF_DIR=/etc/elasticsearch
-      DATA_DIR=/var/lib/elasticsearch/data
-  - path: /etc/systemd/system/kibana.service
+      -Xms350m
+      -Xmx350m
+      -XX:+UseConcMarkSweepGC
+      -XX:CMSInitiatingOccupancyFraction=75
+      -XX:+UseCMSInitiatingOccupancyOnly
+      -XX:+DisableExplicitGC
+      -XX:+AlwaysPreTouch
+      -server
+      -Xss1m
+      -Djava.awt.headless=true
+      -Dfile.encoding=UTF-8
+      -Djna.nosys=true
+      -Djdk.io.permissionsUseCanonicalPath=true
+      -Dio.netty.noUnsafe=true
+      -Dio.netty.noKeySetOptimization=true
+      -Dio.netty.recycler.maxCapacityPerThread=0
+      -Dlog4j.shutdownHookEnabled=false
+      -Dlog4j2.disable.jmx=true
+      -Dlog4j.skipJansi=true
+      -XX:+HeapDumpOnOutOfMemoryError
+  - path: /etc/kibana/kibana.yml
     content: |
-      [Service]
-      ExecStart=/opt/kibana-4.1.1-linux-x64/bin/kibana
-      Restart=on-failure
-      User=ubuntu
-      Group=ubuntu
+      server.host: 0.0.0.0
+  - path: /etc/logstash/jvm.options
+    content: |
+      -Xmx350m
+      -Xms350m
+      -XX:+UseParNewGC
+      -XX:+UseConcMarkSweepGC
+      -XX:CMSInitiatingOccupancyFraction=75
+      -XX:+UseCMSInitiatingOccupancyOnly
+      -XX:+DisableExplicitGC
+      -Djava.awt.headless=true
+      -Dfile.encoding=UTF-8
+      -XX:+HeapDumpOnOutOfMemoryError
+  - path: /etc/logstash/patterns/elb
+    content: |
+      ELB_LINE %{TIMESTAMP_ISO8601:timestamp} %{NOTSPACE:elb} %{IP:clientip}:%{INT:clientport:int} (?:(%{IP:backendip}:?:%{INT:backendport:int})|-) %{NUMBER:request_processing_time:float} %{NUMBER:backend_processing_time:float} %{NUMBER:response_processing_time:float} (?:-|%{INT:elb_status_code:int}) (?:-|%{INT:backend_status_code:int}) %{INT:received_bytes:int} %{INT:sent_bytes:int} \"%{ELB_REQUEST_LINE}\" \"(?:-|%{DATA:user_agent})\" (?:-|%{NOTSPACE:ssl_cipher}) (?:-|%{NOTSPACE:ssl_protocol})
   - path: /etc/logstash/patterns/worker
     content: |
       WORKER_BASE %{LOGLEVEL:level} \s*%{NOTSPACE:class} -
@@ -95,22 +94,31 @@ write_files:
       WORKER_FILE_CONVERSION %{WORKER_BASE} Converting %{GREEDYDATA:filename} \(%{UUID:uuid}, %{INT:size:int}kb\) to PDF, time: %{INT:duration:int}ms
 
       WORKER_DOCSET_CREATION %{WORKER_BASE} Created DocumentSet %{INT:documentSetId}. cluster %{INT:clusterDuration:int}ms; total %{INT:totalDuration:int}ms
-  - path: /etc/logstash/conf.d/input.conf
+  - path: /etc/logstash/patterns/web
+    content: |
+      WEB_BASE %{LOGLEVEL:level} \s*%{NOTSPACE:class} - \s*
+
+      WEB_REQUEST %{WEB_BASE} %{INT:duration}ms %{NOTSPACE:method} %{URIPATH:path}(?:%{URIPARAM:query_string})? -> %{INT:http_status_code}
+  - path: /etc/logstash/conf.d/logstash.conf
     content: |
       input {
         relp {
-          codec => plain
           port => 2514
           type => relp
         }
+
+        s3 {
+          bucket => "overview-production-load-balancer-logs"
+          delete => true
+          type => elb
+        }
       }
-  - path: /etc/logstash/conf.d/filter.conf
-    content: |
+
       filter {
         if [type] == "relp" {
           # Remove syslog stuff right away
           grok {
-            patterns_dir => "/etc/logstash/patterns"
+            patterns_dir => [ "/etc/logstash/patterns" ]
             match => [ "message", "%{SYSLOGLINE}" ]
             add_tag => "syslog"
             overwrite => [ "message" ]
@@ -119,20 +127,14 @@ write_files:
           syslog_pri {}
         }
 
-        if [program] == "haproxy" {
-          grok {
-            patterns_dir => "/etc/logstash/patterns"
-            match => [ "message", "%{HAPROXYHTTP}" ]
-            add_tag => [ "haproxy" ]
-          }
-        } else if [program] == "postgres" {
+        if [program] == "postgres" {
           # Stitch together logged SQL queries. Each line starts with [\d+-1], so
           # subsequent lines start with [\d+-(not 1)].
           multiline {
             pattern => "^\[\d+-(?:1\d|[2-9])\d*\]"
             what => "previous"
           }
-        } else if [program] == "run-worker.sh" or [program] == "run-frontend.sh" or [program] == "java" {
+        } else if [program] == "run-worker.sh" or [program] == "run-web.sh" or [program] == "java" {
           # This is one of our Java programs
 
           # Stitch together exceptions
@@ -141,16 +143,25 @@ write_files:
             what => "previous"
           }
 
+          # HTTP request
+          grok {
+            patterns_dir => [ "/etc/logstash/patterns" ]
+            match => [ "message", "%{WEB_REQUEST}" ]
+            add_tag => [ "web", "http-request" ]
+            remove_tag => [ "_grokparsefailure" ]
+          }
+
           # File conversion
           grok {
-            patterns_dir => "/etc/logstash/patterns"
+            patterns_dir => [ "/etc/logstash/patterns" ]
             match => [ "message", "%{WORKER_FILE_CONVERSION}" ]
             add_tag => [ "worker", "file-conversion" ]
+            remove_tag => [ "_grokparsefailure" ]
           }
         
           # Docset creation
           grok {
-            patterns_dir => "/etc/logstash/patterns"
+            patterns_dir => [ "/etc/logstash/patterns" ]
             match => [ "message", "%{WORKER_DOCSET_CREATION}" ]
             add_tag => [ "worker", "docset-creation" ]
             remove_tag => [ "_grokparsefailure" ]
@@ -158,17 +169,16 @@ write_files:
         
           # Stack trace
           grok {
-            patterns_dir => "/etc/logstash/patterns"
+            patterns_dir => [ "/etc/logstash/patterns" ]
             match => [ "message", "%{JAVASTACKTRACEPART}" ]
             add_tag => [ "notify", "java-exception" ]
             remove_tag => [ "_grokparsefailure" ]
           }
         }
       }
-  - path: /etc/logstash/conf.d/output.conf
-    content: |
+
       output {
-        elasticsearch { host => localhost }
+        elasticsearch { }
 
         if ("notify" in [tags]) and !([class] == "org.jboss.netty.channel.socket.nio.AbstractNioWorker" and [message] == "cleanUpWriteBuffer") {
           sns {
@@ -177,25 +187,14 @@ write_files:
           }
         }
       }
-mounts:
-  - [ xvdf, /var/lib/elasticsearch ]
-mount_default_fields: [ None, None, 'auto', 'defaults,nobootwait', '0', '2' ]
 runcmd:
   - echo "127.0.1.1 $(hostname)" | sudo tee -a /etc/hosts
-  - env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
-  - /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
-  - chown -R elasticsearch:elasticsearch /var/lib/elasticsearch
-  - /opt/logstash/bin/plugin install logstash-input-relp
-  - /opt/logstash/bin/plugin install logstash-filter-multiline
-  - /opt/logstash/bin/plugin install logstash-filter-syslog_pri
-  - /opt/logstash/bin/plugin install logstash-output-sns
-  - systemctl stop syslog || true
-  - systemctl start syslog
-  - systemctl stop elasticsearch || true
-  - systemctl start elasticsearch
-  - systemctl stop logstash || true
-  - systemctl start logstash
-  - curl https://download.elastic.co/kibana/kibana/kibana-4.1.1-linux-x64.tar.gz -o /tmp/kibana-4.1.1-linux-x64.tar.gz
-  - cd /opt && tar zxf /tmp/kibana-4.1.1-linux-x64.tar.gz # Install Kibana
-  - iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 5601 # Put Kibana on port 80
-  - systemctl start kibana
+  - /usr/share/logstash/bin/logstash-plugin install logstash-input-relp logstash-input-s3 logstash-filter-multiline logstash-filter-syslog_pri logstash-output-sns
+  - systemctl daemon-reload
+  - systemctl restart rsyslog
+  - systemctl enable elasticsearch.service
+  - systemctl restart elasticsearch.service
+  - systemctl enable logstash.service
+  - systemctl restart logstash.service
+  - systemctl enable kibana.service
+  - systemctl restart kibana.service
