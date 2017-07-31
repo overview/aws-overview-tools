@@ -33,7 +33,7 @@ remote_build:
   instance_type: r3.large
   vpc_id: vpc-5c3fd138
   subnet_id: subnet-1e134747
-  ami_id: ami-fd256898 # https://cloud-images.ubuntu.com/releases/15.04/release/ - 64-bit, hvm-ssd
+  ami_id: ami-cb1d41b0 # https://cloud-images.ubuntu.com/releases/17.04/release/ - 64-bit, hvm-ssd
   cache_volume_id: vol-998c9fdb
   keypair_name: manage
   user_data: |
@@ -51,8 +51,6 @@ remote_build:
       - ca-certificates-java
       - zip
     runcmd:
-      - env DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove --purge openjdk-7-jre openjdk-7-jre-headless # ca-certificates-java puts it there in an apt-dependency vortex of uselessness
-      - /var/lib/dpkg/info/ca-certificates-java.postinst configure # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
       - echo "127.0.1.1 $(hostname)" | tee -a /etc/hosts
   init_commands:
     - mkdir -p build-cache && sudo mount /dev/xvdg build-cache && ln -sf `pwd`/build-cache/.ivy2 . && ln -sf `pwd`/build-cache/.npm . && ln -sf `pwd`/build-cache/.sbt .
