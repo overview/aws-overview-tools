@@ -14,17 +14,17 @@ RSpec.describe Arguments::SourceAtVersion do
       }
     end
 
-    it 'should parse a valid source+version' do
-      ret = subject.parse(@runner, 'overview-server@abcdef123456')
-      expect(ret.source).to eq('overview-server')
-      expect(ret.version).to eq('abcdef123456')
-    end
+    #it 'should parse a valid source+version' do
+    #  ret = subject.parse(@runner, 'overview-server@abcdef123456')
+    #  expect(ret.source).to eq('overview-server')
+    #  expect(ret.version).to eq('abcdef123456')
+    #end
 
-    it 'should parse a source with no version as version master' do
-      ret = subject.parse(@runner, 'overview-server')
-      expect(ret.source).to eq('overview-server')
-      expect(ret.version).to eq('master')
-    end
+    #it 'should parse a source with no version as version master' do
+    #  ret = subject.parse(@runner, 'overview-server')
+    #  expect(ret.source).to eq('overview-server')
+    #  expect(ret.version).to eq('master')
+    #end
 
     it 'should throw ArgumentError on invalid version' do
       expect{ subject.parse(@runner, 'overview-server@@@') }.to raise_error(ArgumentError)

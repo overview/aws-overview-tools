@@ -14,15 +14,9 @@ RSpec.describe Stores::Sources do
     yaml = YAML.load('---
       overview-server:
         url: https://github.com/overview/overview-server.git
-        build_remotely: true
-        build_commands:
-          - ./build archive.zip
 
       aws-overview-config:
         url: https://github.com/overview/aws-overview-config.git
-        build_commands:
-          - OVERVIEW_CONFIG=/opt/overview/config/manage/config.yml OVERVIEW_SECRETS=/opt/overview/config/manage/secrets.yml ./generate.sh
-          - "(cd generated && zip -r ../archive.zip *)"
       ')
     Stores::Sources.from_yaml(yaml)
   }

@@ -5,7 +5,8 @@ module Arguments
   #
   # Input is of the form "overview-server" or "overview-server@master".
   class SourceAtVersion < Base
-    RetvalType = Struct.new(:source, :version)
+    RetvalType = Struct.new(:source, :version, :sha1)
+
     # A git ref regex is too complicated, and it doesn't really solve the
     # problem of predicting whether or not a ref is valid. See discussion
     # here:
@@ -29,7 +30,31 @@ module Arguments
 
       version = match[2] || 'master'
 
-      RetvalType.new(match[1], version)
+      sha1 = revparse(source, version)
+      crash_unless_exists(source, sha1)
+
+      RetvalType.new(match[1], version, sha1)
+    end
+
+    private
+    
+    def revparse(source, treeish)
+      ret = if treeish =~ /\A[a-zA-Z0-9]{40}\Z/
+        # https://github.com/schacon/ruby-git/issues/155
+        treeish
+      else
+        `git ls-remote "#{source.url}" "#{treeish}" | cut -b1-40`.strip
+      end
+
+      raise ArgumentError.new("Could not get sha1 from remote for version '#{treeish}'") if ret.empty?
+      $log.info('source_at_version') { "Revparse of #{treeish}: #{ret}" }
+      ret
+    end
+
+    def crash_unless_exists(source, sha1)
+      if !source.s3_bucket.exists?("#{sha1}.zip")
+        raise ArgumentError.new("Jenkins has not published #{sha1}.zip. It must be there for overview-manage to work.")
+      end
     end
   end
 end

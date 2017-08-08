@@ -2,10 +2,7 @@
 sources:
   overview-server:
     url: https://github.com/overview/overview-server.git
-    artifact_bucket: overview-builds
-    build_remotely: true
-    build_commands:
-      - ./build archive.zip
+    artifact_bucket: overview-builds.overviewdocs.com
 
 machine_types:
   logstash:
@@ -26,32 +23,3 @@ machine_types:
       - sudo /opt/overview/prepare-web.sh
       - sudo /opt/overview/prepare-worker.sh
       - sudo systemctl restart overview-web overview-worker
-
-remote_build:
-  availability_zone: us-east-1a
-  security_group_id: sg-cb1d97ac
-  instance_type: r3.large
-  vpc_id: vpc-5c3fd138
-  subnet_id: subnet-1e134747
-  ami_id: ami-cb1d41b0 # https://cloud-images.ubuntu.com/releases/17.04/release/ - 64-bit, hvm-ssd
-  cache_volume_id: vol-998c9fdb
-  keypair_name: manage
-  user_data: |
-    #cloud-config
-    hostname: build
-    repo_update: true
-    repo_upgrade: all
-    packages:
-      - build-essential
-      - nodejs
-      - nodejs-dev
-      - nodejs-legacy
-      - npm
-      - openjdk-8-jdk
-      - ca-certificates-java
-      - zip
-    runcmd:
-      - echo "127.0.1.1 $(hostname)" | tee -a /etc/hosts
-  init_commands:
-    - mkdir -p build-cache && sudo mount /dev/xvdg build-cache && ln -sf `pwd`/build-cache/.ivy2 . && ln -sf `pwd`/build-cache/.npm . && ln -sf `pwd`/build-cache/.sbt .
-    - mkdir -p build && sudo mkfs.ext2 -q /dev/xvdf && sudo mount /dev/xvdf build && sudo chown ubuntu:ubuntu build

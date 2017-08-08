@@ -31,10 +31,10 @@ fi
 
 # Quick start: Recipes
 
-* To deploy new code: `overview-manage deploy _tag_ production`
-* To deploy new code to only one machine: `overview-manage deploy _tag_ production/web/10.x.x.x`
+* To deploy new code (that has been built on Jenkins): `overview-manage deploy overview-server@_tag_ production`
+* To deploy new code to only one machine: `overview-manage deploy overview-server@_tag_ production/web/10.x.x.x`
 
-These all restart the running code on the servers. The restarts all happen within the same 30s, no matter how long the build takes. If the build fails, nothing happens.
+These all restart the running code on the servers. The restarts all happen within the same 30s. If Jenkins never published the tag's artifact, nothing happens.
 
 # Usage
 
@@ -44,9 +44,8 @@ See "Concepts" below to understand what these commands do. This is a mere cheat-
 
 | Command | Summary | Example | Duration |
 | ------- | ------- | ------- | -------- |
-| `build` | Compiles source code, uploads _sha1_.zip to S3 | `overview-manage build deploy-2014-05-14.01` | 10min |
-| `publish` | Make "staging.zip" or "production.zip" point to the built zip | `overview-manage publish deploy-2014-05-14.01 staging | 5s |
-| `deploy` | Runs commands to restart components | `overview-manage deploy deploy-2014-05-14.01 staging` (or `staging/worker`) | 5s per server |
+| `publish` | Make "staging.zip" or "production.zip" point to the built zip | `overview-manage publish overview-server@deploy-2014-05-14.01 staging | 5s |
+| `deploy` | Runs commands to restart components | `overview-manage deploy overview-server@deploy-2014-05-14.01 staging` (or `staging/worker`) | 5s per server |
 
 Each of these commands runs the commands before it; if they've already been done, a quick verification will occur instead.
 
@@ -57,26 +56,26 @@ Want to deploy at a specific time? Run `publish` ahead of time, then `deploy` wh
 Nouns:
 
 * A **source** is a Git repository that contains code.
-* A **version** is a version of the *source*, identified by a "tree-ish". (For instance: `master`, `tag1`, `aec6a94` or `3fbd31873e7b220dcbe535e06099a1856051b935`.)
-* An **artifact** is a set of files representing a compiled *source* at a given *version*. (For instance: a zipfile.) It includes a checksum for verifying itself.
+* A **version** is a version of the *source*, identified by a "tree-ish". (For instance: `master`, `tag1`, or `3fbd31873e7b220dcbe535e06099a1856051b935`.)
+* An **artifact** is a set of files representing a compiled *source* at a given *version* (a zipfile).
 * An **environment** is one of **production** or **staging**. We test stuff on *staging*; our live site is on *production*.
 * A **machine** is an Amazon EC2 Instance. It runs in one *environment*. We identify it by its private IP address, e.g., `10.x.x.x`.
 * A **machine type** is a recipe: it specifies *machine*'s configuration and instance type. We identify, say, `production/web`.
 
 Verbs:
 
-* You **build** a *source* to produce an *artifact* on S3. This is slow.
+* You **build** a *source* to produce an *artifact* on S3. This happens on Jenkins, _not_ in this project.
 * You **publish** an *artifact* to indicate, on S3, that it is the latest version in the given *environment*.
 * You **restart** services on a *machine* to make it use the latest published version.
-* You **deploy** services to a *machine* by running *build*, *publish* and *restart*.
+* You **deploy** services to a *machine* by running *publish* and *restart*.
 
 Here's where things are stored:
 
 | Bunch of files | Key properties | Where it is | What you can do with it |
 | -------------- | -------------- | ----------- | ----------------------- |
-| source | URL | the `manage` instance, `/opt/overview/manage/sources/SOURCE.git` (bare GitHub clone) | *build* at a given version |
-| artifact | version | S3, `overview-builds/VERSION.{zip,md5sum}` | *prepare* to publish; *verify* |
-| published artifact | nothing | S3, `overview-builds/ENVIRONMENT.{zip,md5sum}` |
+| source | URL | GitHub | *build* at a given SHA1, using Jenkins |
+| artifact | version | S3, `overview-builds/SHA1.zip` | *publish* |
+| published artifact | nothing | S3, `overview-builds/ENVIRONMENT.zip` |
 
 # Development
 

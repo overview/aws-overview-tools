@@ -2,9 +2,6 @@ require 'aws-sdk'
 
 require_relative 'commands/help'
 require_relative 'commands/status'
-require_relative 'commands/add_instance'
-require_relative 'commands/remove_instance'
-require_relative 'commands/build_command'
 require_relative 'commands/publish_command'
 require_relative 'commands/deploy_command'
 require_relative 'commands/restart_command'
@@ -24,9 +21,6 @@ class Runner
     command_classes = [
       Commands::Help,
       Commands::Status,
-      Commands::AddInstance,
-      Commands::RemoveInstance,
-      Commands::BuildCommand,
       Commands::PublishCommand,
       Commands::DeployCommand,
       Commands::StartCommand,
@@ -34,7 +28,7 @@ class Runner
       Commands::RestartCommand
     ]
 
-    # Turn into hash of { 'add-instance' => Commands::AddInstance.new }
+    # Turn into hash of { 'add-instance' => Commands::PublishCommand.new }
     @commands = command_classes.map(&:new).inject({}) { |h, v| h[v.name] = v; h }
   end
 
@@ -82,10 +76,6 @@ class Runner
 
   def connect_to_ec2
     Aws::EC2::Client.new
-  end
-
-  def remote_build_config
-    @config['remote_build']
   end
 
   def run(command_name, *args)

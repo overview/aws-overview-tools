@@ -27,11 +27,6 @@ RSpec.describe Runner do
     Runner.new(@state, @store, @config)
   }
 
-  it 'should have remote_build_config' do
-    @config['remote_build'] = 'hello'
-    expect(subject.remote_build_config).to eq('hello')
-  end
-
   describe 'machines_with_spec' do
     before(:each) do
       @machines = @some_machines
