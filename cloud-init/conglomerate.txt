@@ -74,7 +74,7 @@ write_files:
       #!/bin/bash
 
       aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/worker-env.sh /opt/overview/worker-env.sh
-      aws s3 cp s3://overview-builds/#OVERVIEW_ENVIRONMENT#.zip /tmp/worker-archive.zip
+      aws s3 cp s3://overview-builds.overviewdocs.com/#OVERVIEW_ENVIRONMENT#.zip /tmp/worker-archive.zip
       FILENAMES=$(unzip -qq -p /tmp/worker-archive.zip archive/worker/classpath.txt | sed -e 's/^/archive\/lib\//')
       rm -rf /opt/overview/worker
       unzip -qq -d /opt/overview/worker -j /tmp/worker-archive.zip $FILENAMES
@@ -126,7 +126,7 @@ write_files:
 
       aws s3 cp s3://overview-#OVERVIEW_ENVIRONMENT#-secrets/web-env.sh /opt/overview/web-env.sh
 
-      aws s3 cp s3://overview-builds/#OVERVIEW_ENVIRONMENT#.zip /tmp/archive.zip
+      aws s3 cp s3://overview-builds.overviewdocs.com/#OVERVIEW_ENVIRONMENT#.zip /tmp/archive.zip
 
       FILENAMES=$(unzip -qq -p /tmp/archive.zip archive/web/classpath.txt | sed -e 's/^/archive\/lib\//')
       rm -rf /opt/overview/web
