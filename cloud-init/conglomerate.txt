@@ -6,6 +6,7 @@ packages:
   - awscli
   - ca-certificates
   - ca-certificates-java
+  - daemontools
   - libreoffice
   - openjdk-8-jre-headless
   - postgresql-9.4
@@ -188,6 +189,8 @@ runcmd:
   - systemctl start syslog
   - systemctl stop postgresql redis-server
   - systemctl start postgresql redis-server
+  - aws s3 cp s3://overview-builds.overviewdocs.com/pdfocr-native/latest/split-pdf-and-extract-text /opt/overview/
+  - chmod +x /opt/overview/split-pdf-and-extract-text
   - /opt/overview/prepare-worker.sh
   - /opt/overview/prepare-web.sh
   - chown -R overview:overview /opt/overview
